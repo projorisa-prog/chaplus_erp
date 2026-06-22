@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}차플러스 ERP{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+    <!-- main.js는 반드시 head에서 로드 (body 끝에 두면 HTMX 충돌) -->
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+<div class="flex min-h-screen">
+
+    <!-- 사이드바 -->
+    <aside class="w-56 bg-slate-800 text-slate-100 flex-shrink-0">
+        <div class="px-4 py-5 text-lg font-bold border-b border-slate-700">
+            🚐 차플러스 ERP
+        </div>
+
+        <nav class="py-2 text-sm">
+            <a href="/" class="block px-4 py-2 hover:bg-slate-700">📊 대시보드</a>
+
+            <div class="px-4 pt-4 pb-1 text-xs text-slate-400 uppercase">영업</div>
+            <a href="/quotes" class="block px-4 py-2 hover:bg-slate-700">📋 견적관리</a>
+            <a href="/operations" class="block px-4 py-2 hover:bg-slate-700">🚗 운행관리</a>
+
+            <div class="px-4 pt-4 pb-1 text-xs text-slate-400 uppercase">정산</div>
+            <a href="/billing" class="block px-4 py-2 hover:bg-slate-700">💰 청구관리</a>
+            <a href="/payment" class="block px-4 py-2 hover:bg-slate-700">💳 지급관리</a>
+
+            <div class="px-4 pt-4 pb-1 text-xs text-slate-400 uppercase">경리</div>
+            <a href="/ledger" class="block px-4 py-2 hover:bg-slate-700">💵 입출금관리</a>
+            <a href="/client_ledger" class="block px-4 py-2 hover:bg-slate-700">📒 거래처원장</a>
+            <a href="/driver_ledger" class="block px-4 py-2 hover:bg-slate-700">📒 기사원장</a>
+            <a href="/receipt" class="block px-4 py-2 hover:bg-slate-700">🧾 지출증빙</a>
+
+            <div class="px-4 pt-4 pb-1 text-xs text-slate-400 uppercase">마스터</div>
+            <a href="/vehicles" class="block px-4 py-2 hover:bg-slate-700">🚙 차량관리</a>
+            <a href="/drivers" class="block px-4 py-2 hover:bg-slate-700">👤 기사관리</a>
+            <a href="/clients" class="block px-4 py-2 hover:bg-slate-700">🏢 거래처관리</a>
+            <a href="/account_subjects" class="block px-4 py-2 hover:bg-slate-700">📂 계정과목</a>
+            <a href="/payment_accounts" class="block px-4 py-2 hover:bg-slate-700">💳 결제수단관리</a>
+
+            <div class="px-4 pt-4 pb-1 text-xs text-slate-400 uppercase">시스템</div>
+            <a href="/settings" class="block px-4 py-2 hover:bg-slate-700">⚙️ 설정</a>
+        </nav>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="flex-1 p-6">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+</body>
+</html>

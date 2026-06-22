@@ -1,0 +1,15 @@
+{% set grand = namespace(val=0) %}
+{% for qd in q.details %}
+{% set sub = (qd.unit_price * qd.qty) + qd.region_surcharge + qd.time_surcharge + qd.lodging_fee %}
+{% set grand.val = grand.val + sub %}
+{% include '_quote_detail_row.html' %}
+{% else %}
+<tr><td colspan="15" class="text-center text-gray-400 py-6">명세가 없습니다. 위 폼에서 추가하세요.</td></tr>
+{% endfor %}
+{% if q.details %}
+<tr class="font-bold border-t bg-gray-50">
+    <td colspan="13" class="py-2 text-right text-sm">합계</td>
+    <td class="text-right text-blue-700">{{ '{:,}'.format(grand.val) }}원</td>
+    <td></td>
+</tr>
+{% endif %}

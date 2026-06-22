@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}차량관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">🚙 차량관리</h1>
+
+<!-- 검색 -->
+<div class="flex gap-2 mb-4">
+    <input type="text" name="q" placeholder="차종명 검색"
+           class="border rounded px-3 py-1.5 text-sm"
+           hx-get="/api/vehicles/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#vehicle-rows"
+           hx-include="[name='vehicle_type_filter']">
+
+    <select name="vehicle_type_filter"
+            class="border rounded px-3 py-1.5 text-sm"
+            hx-get="/api/vehicles/"
+            hx-trigger="change"
+            hx-target="#vehicle-rows"
+            hx-include="[name='q']">
+        <option value="">전체구분</option>
+        <option value="자차">자차</option>
+        <option value="타사">타사</option>
+    </select>
+</div>
+
+<div class="grid grid-cols-3 gap-6 items-start">
+
+    <!-- 추가 폼 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">차량 추가</h2>
+        <form hx-post="/api/vehicles/" hx-target="#vehicle-rows" hx-swap="innerHTML" class="space-y-2"
+              hx-on::after-request="this.reset()">
+            <input name="name" placeholder="차종명" required class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="capacity" type="number" placeholder="인승" class="w-full border rounded px-2 py-1.5 text-sm">
+            <select name="vehicle_type" required class="w-full border rounded px-2 py-1.5 text-sm">
+                <option value="자차">자차</option>
+                <option value="타사">타사</option>
+            </select>
+            <input name="plate_number" placeholder="차량번호 (자차만)" class="w-full border rounded px-2 py-1.5 text-sm">
+            <button type="submit" class="w-full bg-slate-800 text-white rounded py-1.5 text-sm">+ 추가</button>
+        </form>
+    </div>
+
+    <!-- 목록 -->
+    <div class="col-span-2 bg-white rounded-lg shadow p-4">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left border-b">
+                    <th class="py-2">ID</th>
+                    <th>차종명</th>
+                    <th>인승</th>
+                    <th>구분</th>
+                    <th>차량번호</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="vehicle-rows">
+                {% include '_vehicle_rows.html' %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

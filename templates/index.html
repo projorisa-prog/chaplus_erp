@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}대시보드 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">대시보드</h1>
+
+<div class="grid grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-500">이달 운행 건수</div>
+        <div class="text-2xl font-bold mt-1">-</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-500">이달 견적 건수</div>
+        <div class="text-2xl font-bold mt-1">-</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-500">예약확정 대기</div>
+        <div class="text-2xl font-bold mt-1">-</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-500">이달 청구 합계</div>
+        <div class="text-2xl font-bold mt-1">-</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">최근 운행 목록</h2>
+        <p class="text-sm text-gray-400">2단계 이후 연동 예정</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">최근 견적 목록</h2>
+        <p class="text-sm text-gray-400">2단계 이후 연동 예정</p>
+    </div>
+</div>
+
+<div class="mt-8 text-xs text-gray-400">
+    ✅ 1단계 기반 구축 완료 — Flask 서버가 정상 작동 중입니다.
+</div>
+{% endblock %}

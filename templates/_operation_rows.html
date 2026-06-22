@@ -1,0 +1,36 @@
+{% for o in orders %}
+{% set bill = namespace(val=0) %}
+{% set pay = namespace(val=0) %}
+{% for od in o.details %}
+{% set bill.val = bill.val + od.unit_price + od.region_surcharge + od.time_surcharge + od.lodging_fee %}
+{% set pay.val = pay.val + od.base_pay + od.driver_time_surcharge + od.fuel_cost + od.toll_fee + od.parking_fee + od.meal_fee + od.lodging_pay %}
+{% endfor %}
+<tr class="border-b hover:bg-gray-50 cursor-pointer"
+    onclick="location.href='/operations/{{ o.id }}'">
+    <td class="py-2 font-mono text-blue-600">{{ o.id }}</td>
+    <td class="font-mono text-gray-400 text-xs">{{ o.quote_id or '' }}</td>
+    <td>{{ o.client.name }}</td>
+    <td>{{ o.start_datetime or '' }}</td>
+    <td>{{ o.end_datetime or '' }}</td>
+    <td>
+        <span class="px-2 py-0.5 rounded text-xs
+            {% if o.status == '운행' %}bg-blue-100 text-blue-700
+            {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+            {{ o.status }}
+        </span>
+    </td>
+    <td>{{ o.details|length }}일</td>
+    <td class="text-right">{{ '{:,}'.format(bill.val) }}원</td>
+    <td class="text-right text-orange-600">{{ '{:,}'.format(pay.val) }}원</td>
+    <td class="text-right">
+        <button class="text-red-500 text-xs"
+                hx-delete="/api/operations/{{ o.id }}"
+                hx-target="#operation-rows"
+                hx-swap="innerHTML"
+                hx-confirm="운행 {{ o.id }}를 삭제하시겠습니까?"
+                onclick="event.stopPropagation()">삭제</button>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="10" class="text-center text-gray-400 py-6">등록된 운행이 없습니다</td></tr>
+{% endfor %}

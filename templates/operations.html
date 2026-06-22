@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}운행관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">🚗 운행관리</h1>
+
+<!-- 검색 -->
+<div class="flex gap-2 mb-4 items-center flex-wrap">
+    <input type="text" name="q" placeholder="거래처명 검색"
+           class="border rounded px-3 py-1.5 text-sm"
+           hx-get="/api/operations/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#operation-rows"
+           hx-include="[name='status_filter']">
+
+    <select name="status_filter"
+            class="border rounded px-3 py-1.5 text-sm"
+            hx-get="/api/operations/"
+            hx-trigger="change"
+            hx-target="#operation-rows"
+            hx-include="[name='q']">
+        <option value="">전체상태</option>
+        <option value="예약확정">예약확정</option>
+        <option value="운행">운행</option>
+    </select>
+
+    <!-- 견적 복사 -->
+    <div class="ml-auto flex gap-2 items-center border-l pl-4">
+        <span class="text-sm text-gray-500">견적에서 복사:</span>
+        <select id="copy-quote-id" name="quote_id" class="border rounded px-3 py-1.5 text-sm">
+            <option value="">확정 견적 선택</option>
+            {% for q in quotes %}
+            <option value="{{ q.id }}">{{ q.id }} / {{ q.client.name }} / {{ q.start_datetime }}</option>
+            {% endfor %}
+        </select>
+        <button class="bg-green-700 text-white px-4 py-1.5 rounded text-sm"
+                hx-post="/api/operations/copy_from_quote"
+                hx-include="#copy-quote-id"
+                hx-target="#operation-rows"
+                hx-swap="innerHTML"
+                hx-on::after-request="document.getElementById('copy-quote-id').value=''">
+            📋 복사 생성
+        </button>
+    </div>
+
+    <!-- 직접 생성 -->
+    <div class="flex gap-2 items-center border-l pl-4">
+        <span class="text-sm text-gray-500">직접 생성:</span>
+        <select id="new-op-client" name="client_id" class="border rounded px-3 py-1.5 text-sm">
+            <option value="">거래처 선택</option>
+            {% for c in clients %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+        </select>
+        <input id="new-op-start" name="start_datetime" placeholder="시작 YYYY-MM-DD HH:MM"
+               class="border rounded px-3 py-1.5 text-sm w-44">
+        <input id="new-op-end" name="end_datetime" placeholder="종료 YYYY-MM-DD"
+               class="border rounded px-3 py-1.5 text-sm w-36">
+        <button class="bg-slate-800 text-white px-4 py-1.5 rounded text-sm"
+                hx-post="/api/operations/"
+                hx-include="#new-op-client, #new-op-start, #new-op-end"
+                hx-target="#operation-rows"
+                hx-swap="innerHTML"
+                hx-on::after-request="
+                    document.getElementById('new-op-client').value='';
+                    document.getElementById('new-op-start').value='';
+                    document.getElementById('new-op-end').value='';
+                ">+ 직접 생성</button>
+    </div>
+</div>
+
+<!-- 목록 -->
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left border-b">
+                <th class="py-2">운행번호</th>
+                <th>견적번호</th>
+                <th>거래처</th>
+                <th>시작일시</th>
+                <th>종료일</th>
+                <th>상태</th>
+                <th>일수</th>
+                <th class="text-right">청구합계</th>
+                <th class="text-right">지급합계</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="operation-rows">
+            {% include '_operation_rows.html' %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% for d in drivers %}
+    {% include '_driver_row.html' %}
+{% else %}
+<tr><td colspan="11" class="text-center text-gray-400 py-6">등록된 기사가 없습니다</td></tr>
+{% endfor %}

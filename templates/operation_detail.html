@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}{{ o.id }} - 운행상세{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-4">
+    <a href="/operations" class="text-gray-400 hover:text-gray-600 text-sm">← 목록</a>
+    <h1 class="text-2xl font-bold">운행 {{ o.id }}</h1>
+    {% if o.quote_id %}
+    <a href="/quotes/{{ o.quote_id }}" class="text-xs text-blue-500">📋 견적 {{ o.quote_id }}</a>
+    {% endif %}
+    <span class="px-2 py-0.5 rounded text-xs
+        {% if o.status == '운행' %}bg-blue-100 text-blue-700
+        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+        {{ o.status }}
+    </span>
+</div>
+
+<!-- 부모 헤더 -->
+<div id="operation-header">
+    {% include '_operation_header.html' %}
+</div>
+
+<hr class="my-6">
+
+<!-- 명세 추가 폼 -->
+<h2 class="font-semibold mb-3">운행 명세 추가</h2>
+<form class="bg-white rounded-lg shadow p-4 text-sm mb-4 space-y-3"
+      hx-post="/api/operations/{{ o.id }}/details"
+      hx-target="#op-detail-rows"
+      hx-swap="innerHTML"
+      hx-on::after-request="this.reset()">
+
+    <div class="grid grid-cols-6 gap-2">
+        <input name="run_date" type="date" required placeholder="운행일"
+               class="border rounded px-2 py-1.5">
+        <select name="product_type" id="op-product-type"
+                class="border rounded px-2 py-1.5"
+                onchange="opUpdateCalc()">
+            <option value="Full-Day">Full-Day</option>
+            <option value="Half-Day">Half-Day</option>
+            <option value="DropOff">DropOff</option>
+            <option value="PickUp">PickUp</option>
+        </select>
+        <select name="vehicle_id" class="border rounded px-2 py-1.5">
+            <option value="">차종</option>
+            {% for v in vehicles %}
+            <option value="{{ v.id }}">{{ v.name }}{% if v.plate_number %} ({{ v.plate_number }}){% endif %}</option>
+            {% endfor %}
+        </select>
+        <input name="unit_price" id="op-unit-price" type="number" placeholder="단가"
+               class="border rounded px-2 py-1.5"
+               oninput="opUpdateCalc()">
+        <input name="start_time" id="op-start-time" placeholder="시작 HH:MM"
+               class="border rounded px-2 py-1.5"
+               oninput="opUpdateCalc()">
+        <input name="end_time" id="op-end-time" placeholder="종료 HH:MM"
+               class="border rounded px-2 py-1.5"
+               oninput="opUpdateCalc()">
+    </div>
+
+    <div class="grid grid-cols-6 gap-2">
+        <input name="region" placeholder="서울외지역" class="border rounded px-2 py-1.5">
+        <input name="region_surcharge" type="number" placeholder="지역할증" class="border rounded px-2 py-1.5">
+        <input name="lodging_fee" type="number" placeholder="숙식비(청구)" class="border rounded px-2 py-1.5">
+        <!-- 자동계산 미리보기 -->
+        <div class="col-span-3 text-xs text-gray-500 flex gap-3 items-center">
+            최종구분: <span id="op-preview-type" class="font-semibold text-blue-600">-</span>
+            추가시간: <span id="op-preview-extra" class="font-semibold">-</span>h
+            시간할증: <span id="op-preview-surcharge" class="font-semibold text-red-500">-</span>원
+        </div>
+    </div>
+
+    <div class="border-t pt-3">
+        <div class="text-xs text-gray-400 mb-2">── 기사 지급 ──</div>
+        <div class="grid grid-cols-6 gap-2">
+            <select name="driver_id" id="op-driver-id"
+                    class="border rounded px-2 py-1.5"
+                    onchange="fillDriverInfo(this.value)">
+                <option value="">기사 선택</option>
+                {% for d in drivers %}
+                <option value="{{ d.id }}">{{ d.name }} ({{ d.type }})</option>
+                {% endfor %}
+            </select>
+            <input name="plate_number" id="op-plate-number" placeholder="차량번호"
+                   class="border rounded px-2 py-1.5">
+            <input name="base_pay" id="op-base-pay" type="number" placeholder="기본급"
+                   class="border rounded px-2 py-1.5">
+            <input name="fuel_cost" type="number" placeholder="유류비"
+                   class="border rounded px-2 py-1.5">
+            <select name="fuel_card" class="border rounded px-2 py-1.5">
+                <option value="">유류카드</option>
+                <option value="회사카드">회사카드</option>
+                <option value="본인카드">본인카드</option>
+            </select>
+            <input name="toll_fee" type="number" placeholder="통행료"
+                   class="border rounded px-2 py-1.5">
+        </div>
+        <div class="grid grid-cols-6 gap-2 mt-2">
+            <select name="toll_card" class="border rounded px-2 py-1.5">
+                <option value="">통행카드</option>
+                <option value="회사카드">회사카드</option>
+                <option value="본인카드">본인카드</option>
+            </select>
+            <input name="parking_fee" type="number" placeholder="주차비"
+                   class="border rounded px-2 py-1.5">
+            <select name="parking_card" class="border rounded px-2 py-1.5">
+                <option value="">주차카드</option>
+                <option value="회사카드">회사카드</option>
+                <option value="본인카드">본인카드</option>
+            </select>
+            <input name="meal_fee" type="number" placeholder="식대"
+                   class="border rounded px-2 py-1.5">
+            <select name="meal_card" class="border rounded px-2 py-1.5">
+                <option value="">식대카드</option>
+                <option value="회사카드">회사카드</option>
+                <option value="본인카드">본인카드</option>
+            </select>
+            <input name="lodging_pay" type="number" placeholder="숙식비(지급)"
+                   class="border rounded px-2 py-1.5">
+        </div>
+    </div>
+
+    <button type="submit"
+            class="bg-slate-800 text-white rounded px-6 py-1.5 text-sm">+ 명세 추가</button>
+</form>
+
+<!-- 명세 목록 -->
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm whitespace-nowrap">
+        <thead>
+            <tr class="text-left border-b text-xs text-gray-500">
+                <th class="py-2">ID</th>
+                <th>운행일</th>
+                <th>구분</th>
+                <th>차종</th>
+                <th class="text-right">단가</th>
+                <th>시작</th>
+                <th>종료</th>
+                <th class="text-right">추가h</th>
+                <th class="text-right">시간할증</th>
+                <th>지역</th>
+                <th class="text-right">지역할증</th>
+                <th class="text-right">숙식(청)</th>
+                <th class="text-right bg-blue-50">청구소계</th>
+                <th>기사</th>
+                <th>차량번호</th>
+                <th class="text-right">기본급</th>
+                <th class="text-right">기사할증</th>
+                <th class="text-right">유류</th>
+                <th class="text-right">통행</th>
+                <th class="text-right">주차</th>
+                <th class="text-right">식대</th>
+                <th class="text-right">숙식(지)</th>
+                <th class="text-right bg-orange-50">지급소계</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="op-detail-rows">
+            {% include '_operation_detail_rows.html' %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function opUpdateCalc() {
+    var productType = document.getElementById('op-product-type').value;
+    var startTime = document.getElementById('op-start-time').value;
+    var endTime = document.getElementById('op-end-time').value;
+    var unitPrice = document.getElementById('op-unit-price').value || 0;
+
+    if (!startTime || !endTime) {
+        document.getElementById('op-preview-type').textContent = productType;
+        document.getElementById('op-preview-extra').textContent = '-';
+        document.getElementById('op-preview-surcharge').textContent = '-';
+        return;
+    }
+
+    fetch('/api/calc/time_surcharge?product_type=' + productType +
+          '&start_time=' + startTime +
+          '&end_time=' + endTime +
+          '&unit_price=' + unitPrice)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('op-preview-type').textContent = data.final_type;
+            document.getElementById('op-preview-extra').textContent = data.extra_time;
+            document.getElementById('op-preview-surcharge').textContent = data.time_surcharge.toLocaleString();
+        });
+}
+
+function fillDriverInfo(driverId) {
+    if (!driverId) return;
+    fetch('/api/drivers/' + driverId + '/info')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('op-plate-number').value = data.plate_number || '';
+            document.getElementById('op-base-pay').value = data.base_pay || '';
+        });
+}
+</script>
+{% endblock %}

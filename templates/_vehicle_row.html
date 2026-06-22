@@ -1,0 +1,18 @@
+<tr id="vehicle-row-{{ v.id }}" class="border-b hover:bg-gray-50">
+    <td class="py-2">{{ v.id }}</td>
+    <td>{{ v.name }}</td>
+    <td>{{ v.capacity or '' }}</td>
+    <td>{{ v.vehicle_type }}</td>
+    <td>{{ v.plate_number or '' }}</td>
+    <td class="text-right space-x-2">
+        <button class="text-blue-600 text-xs"
+                hx-get="/api/vehicles/{{ v.id }}/edit"
+                hx-target="#vehicle-row-{{ v.id }}"
+                hx-swap="outerHTML">수정</button>
+        <button class="text-red-600 text-xs"
+                hx-delete="/api/vehicles/{{ v.id }}"
+                hx-target="#vehicle-rows"
+                hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

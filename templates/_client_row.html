@@ -1,0 +1,21 @@
+<tr id="client-row-{{ c.id }}" class="border-b hover:bg-gray-50">
+    <td class="py-2">{{ c.id }}</td>
+    <td>{{ c.name }}</td>
+    <td>{{ c.business_no or '' }}</td>
+    <td>{{ c.ceo_name or '' }}</td>
+    <td>{{ c.manager_name or '' }}</td>
+    <td>{{ c.phone or '' }}</td>
+    <td>{{ c.email or '' }}</td>
+    <td>{{ c.vat_type }}</td>
+    <td class="text-right space-x-2">
+        <button class="text-blue-600 text-xs"
+                hx-get="/api/clients/{{ c.id }}/edit"
+                hx-target="#client-row-{{ c.id }}"
+                hx-swap="outerHTML">수정</button>
+        <button class="text-red-600 text-xs"
+                hx-delete="/api/clients/{{ c.id }}"
+                hx-target="#client-rows"
+                hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

@@ -1,0 +1,47 @@
+<div class="bg-white rounded-lg shadow p-4 grid grid-cols-5 gap-3 text-sm items-end">
+    <div>
+        <label class="text-xs text-gray-500">거래처</label>
+        <select name="client_id"
+                class="w-full border rounded px-2 py-1.5 mt-1"
+                hx-put="/api/quotes/{{ q.id }}"
+                hx-include="closest div.bg-white"
+                hx-target="#quote-header"
+                hx-swap="innerHTML"
+                hx-trigger="change">
+            {% for c in clients %}
+            <option value="{{ c.id }}" {% if c.id == q.client_id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">행사 시작</label>
+        <input name="start_datetime" value="{{ q.start_datetime or '' }}"
+               placeholder="YYYY-MM-DD HH:MM"
+               class="w-full border rounded px-2 py-1.5 mt-1">
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">행사 종료</label>
+        <input name="end_datetime" value="{{ q.end_datetime or '' }}"
+               placeholder="YYYY-MM-DD"
+               class="w-full border rounded px-2 py-1.5 mt-1">
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">상태</label>
+        <select name="status"
+                class="w-full border rounded px-2 py-1.5 mt-1"
+                hx-put="/api/quotes/{{ q.id }}"
+                hx-include="closest div.bg-white"
+                hx-target="#quote-header"
+                hx-swap="innerHTML"
+                hx-trigger="change">
+            <option value="견적" {% if q.status == '견적' %}selected{% endif %}>견적</option>
+            <option value="확정" {% if q.status == '확정' %}selected{% endif %}>확정</option>
+            <option value="취소" {% if q.status == '취소' %}selected{% endif %}>취소</option>
+        </select>
+    </div>
+    <button class="bg-slate-700 text-white rounded px-4 py-1.5 text-sm"
+            hx-put="/api/quotes/{{ q.id }}"
+            hx-include="closest div.bg-white"
+            hx-target="#quote-header"
+            hx-swap="innerHTML">저장</button>
+</div>

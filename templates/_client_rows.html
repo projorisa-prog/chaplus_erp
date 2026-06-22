@@ -1,0 +1,5 @@
+{% for c in clients %}
+    {% include '_client_row.html' %}
+{% else %}
+<tr><td colspan="9" class="text-center text-gray-400 py-6">등록된 거래처가 없습니다</td></tr>
+{% endfor %}

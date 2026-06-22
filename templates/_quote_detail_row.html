@@ -1,0 +1,35 @@
+{% set sub = (qd.unit_price * qd.qty) + qd.region_surcharge + qd.time_surcharge + qd.lodging_fee %}
+<tr id="qd-row-{{ qd.id }}" class="border-b hover:bg-gray-50">
+    <td class="py-1.5 font-mono text-xs text-gray-400">{{ qd.id }}</td>
+    <td>{{ qd.run_date or '' }}</td>
+    <td>
+        <span class="px-1.5 py-0.5 rounded text-xs
+            {% if qd.product_type == 'Full-Day' %}bg-blue-100 text-blue-700
+            {% elif qd.product_type == 'Half-Day' %}bg-purple-100 text-purple-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ qd.product_type }}
+        </span>
+    </td>
+    <td>{{ qd.vehicle.name if qd.vehicle else '' }}{% if qd.vehicle and qd.vehicle.plate_number %} ({{ qd.vehicle.plate_number }}){% endif %} </td>
+    <td class="text-xs text-gray-500">{{ qd.includes or '' }}</td>
+    <td class="text-center">{{ qd.qty }}</td>
+    <td class="text-right">{{ '{:,}'.format(qd.unit_price) }}</td>
+    <td class="text-center text-xs">{{ qd.use_time or '' }}</td>
+    <td class="text-center">{{ qd.extra_time or 0 }}</td>
+    <td class="text-right text-red-500">{{ '{:,}'.format(qd.time_surcharge) if qd.time_surcharge else '' }}</td>
+    <td class="text-xs">{{ qd.region or '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(qd.region_surcharge) if qd.region_surcharge else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(qd.lodging_fee) if qd.lodging_fee else '' }}</td>
+    <td class="text-right font-semibold">{{ '{:,}'.format(sub) }}</td>
+    <td class="text-right space-x-1">
+        <button class="text-blue-600 text-xs"
+                hx-get="/api/quote_details/{{ qd.id }}/edit"
+                hx-target="#qd-row-{{ qd.id }}"
+                hx-swap="outerHTML">수정</button>
+        <button class="text-red-500 text-xs"
+                hx-delete="/api/quote_details/{{ qd.id }}"
+                hx-target="#detail-rows"
+                hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

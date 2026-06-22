@@ -1,0 +1,31 @@
+<tr id="client-row-{{ c.id }}" class="border-b bg-yellow-50">
+    <td class="py-2">{{ c.id }}</td>
+    <td><input name="name" value="{{ c.name }}" class="w-24 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="business_no" value="{{ c.business_no or '' }}" class="w-24 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="ceo_name" value="{{ c.ceo_name or '' }}" class="w-16 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="manager_name" value="{{ c.manager_name or '' }}" class="w-16 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="phone" value="{{ c.phone or '' }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="email" value="{{ c.email or '' }}" class="w-28 border rounded px-1 py-0.5 text-sm"></td>
+    <td>
+        <select name="vat_type" class="border rounded px-1 py-0.5 text-sm">
+            <option value="포함" {% if c.vat_type == '포함' %}selected{% endif %}>포함</option>
+            <option value="별도" {% if c.vat_type == '별도' %}selected{% endif %}>별도</option>
+            <option value="면세" {% if c.vat_type == '면세' %}selected{% endif %}>면세</option>
+        </select>
+        <!-- 목록에 안 보이는 필드는 기존값 유지를 위한 hidden -->
+        <input type="hidden" name="business_type" value="{{ c.business_type or '' }}">
+        <input type="hidden" name="business_item" value="{{ c.business_item or '' }}">
+        <input type="hidden" name="tax_invoice_email" value="{{ c.tax_invoice_email or '' }}">
+    </td>
+    <td class="text-right space-x-2">
+        <button class="text-green-600 text-xs"
+                hx-put="/api/clients/{{ c.id }}"
+                hx-include="closest tr"
+                hx-target="#client-rows"
+                hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500 text-xs"
+                hx-get="/api/clients/{{ c.id }}/cancel"
+                hx-target="#client-row-{{ c.id }}"
+                hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

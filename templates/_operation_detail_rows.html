@@ -1,0 +1,20 @@
+{% set grand_bill = namespace(val=0) %}
+{% set grand_pay = namespace(val=0) %}
+{% for od in o.details %}
+{% set bill_sub = od.unit_price + od.region_surcharge + od.time_surcharge + od.lodging_fee %}
+{% set pay_sub = od.base_pay + od.driver_time_surcharge + od.fuel_cost + od.toll_fee + od.parking_fee + od.meal_fee + od.lodging_pay %}
+{% set grand_bill.val = grand_bill.val + bill_sub %}
+{% set grand_pay.val = grand_pay.val + pay_sub %}
+{% include '_operation_detail_row.html' %}
+{% else %}
+<tr><td colspan="24" class="text-center text-gray-400 py-6">명세가 없습니다.</td></tr>
+{% endfor %}
+{% if o.details %}
+<tr class="font-bold border-t bg-gray-50 text-sm">
+    <td colspan="12" class="py-2 text-right">합계</td>
+    <td class="text-right bg-blue-50 text-blue-700">{{ '{:,}'.format(grand_bill.val) }}원</td>
+    <td colspan="9"></td>
+    <td class="text-right bg-orange-50 text-orange-700">{{ '{:,}'.format(grand_pay.val) }}원</td>
+    <td></td>
+</tr>
+{% endif %}

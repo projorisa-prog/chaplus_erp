@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}견적관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">📋 견적관리</h1>
+
+<!-- 검색 + 추가 -->
+<div class="flex gap-2 mb-4 items-end">
+    <input type="text" name="q" placeholder="거래처명 검색"
+           class="border rounded px-3 py-1.5 text-sm"
+           hx-get="/api/quotes/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#quote-rows"
+           hx-include="[name='status_filter']">
+
+    <select name="status_filter"
+            class="border rounded px-3 py-1.5 text-sm"
+            hx-get="/api/quotes/"
+            hx-trigger="change"
+            hx-target="#quote-rows"
+            hx-include="[name='q']">
+        <option value="">전체상태</option>
+        <option value="견적">견적</option>
+        <option value="확정">확정</option>
+        <option value="취소">취소</option>
+    </select>
+
+    <!-- 견적 추가 폼 -->
+    <div class="ml-auto flex gap-2 items-center">
+        <select name="client_id" id="new-quote-client" class="border rounded px-3 py-1.5 text-sm">
+            <option value="">거래처 선택</option>
+            {% for c in clients %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="start_datetime" id="new-quote-start" placeholder="시작 YYYY-MM-DD HH:MM"
+               class="border rounded px-3 py-1.5 text-sm w-44">
+        <input type="text" name="end_datetime" id="new-quote-end" placeholder="종료 YYYY-MM-DD"
+               class="border rounded px-3 py-1.5 text-sm w-36">
+        <button class="bg-slate-800 text-white px-4 py-1.5 rounded text-sm"
+                hx-post="/api/quotes/"
+                hx-include="#new-quote-client, #new-quote-start, #new-quote-end"
+                hx-target="#quote-rows"
+                hx-swap="innerHTML"
+                hx-on::after-request="
+                    document.getElementById('new-quote-client').value='';
+                    document.getElementById('new-quote-start').value='';
+                    document.getElementById('new-quote-end').value='';
+                ">+ 견적 생성</button>
+    </div>
+</div>
+
+<!-- 목록 -->
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left border-b">
+                <th class="py-2">견적번호</th>
+                <th>거래처</th>
+                <th>행사시작</th>
+                <th>행사종료</th>
+                <th>상태</th>
+                <th>일수</th>
+                <th>합계금액</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="quote-rows">
+            {% include '_quote_rows.html' %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

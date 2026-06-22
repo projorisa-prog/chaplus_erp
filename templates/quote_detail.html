@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ q.id }} - 견적상세{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-4">
+    <a href="/quotes" class="text-gray-400 hover:text-gray-600 text-sm">← 목록</a>
+    <h1 class="text-2xl font-bold">견적 {{ q.id }}</h1>
+    <span class="px-2 py-0.5 rounded text-xs
+        {% if q.status == '확정' %}bg-green-100 text-green-700
+        {% elif q.status == '취소' %}bg-red-100 text-red-600
+        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+        {{ q.status }}
+    </span>
+</div>
+
+<!-- 부모 헤더 -->
+<div id="quote-header">
+    {% include '_quote_header.html' %}
+</div>
+
+<hr class="my-6">
+
+<!-- 자식 명세 추가 폼 -->
+<h2 class="font-semibold mb-3">운행 명세 추가</h2>
+<form class="bg-white rounded-lg shadow p-4 grid grid-cols-5 gap-2 text-sm mb-4"
+      hx-post="/api/quotes/{{ q.id }}/details"
+      hx-target="#detail-rows"
+      hx-swap="innerHTML"
+      hx-on::after-request="this.reset(); updateTimeSurcharge()">
+
+    <input name="run_date" type="date" required placeholder="운행일"
+           class="border rounded px-2 py-1.5">
+    <select name="product_type" id="add-product-type"
+            class="border rounded px-2 py-1.5"
+            onchange="updateTimeSurcharge()">
+        <option value="Full-Day">Full-Day</option>
+        <option value="Half-Day">Half-Day</option>
+        <option value="DropOff">DropOff</option>
+        <option value="PickUp">PickUp</option>
+    </select>
+    <select name="vehicle_id" class="border rounded px-2 py-1.5">
+        <option value="">차종 선택</option>
+        {% for v in vehicles %}
+        <option value="{{ v.id }}">
+            {{ v.name }}{% if v.plate_number %} ({{ v.plate_number }}){% endif %}
+        </option>
+        {% endfor %}
+    </select>
+    <input name="qty" type="number" value="1" min="1" placeholder="대수"
+           class="border rounded px-2 py-1.5">
+    <input name="unit_price" id="add-unit-price" type="number" placeholder="단가"
+           class="border rounded px-2 py-1.5"
+           oninput="updateTimeSurcharge()">
+
+    <input name="start_time" id="add-start-time" placeholder="시작 HH:MM (예:09:00)"
+           class="border rounded px-2 py-1.5"
+           oninput="updateTimeSurcharge()">
+    <input name="end_time" id="add-end-time" placeholder="종료 HH:MM (예:25:00)"
+           class="border rounded px-2 py-1.5"
+           oninput="updateTimeSurcharge()">
+    <input name="region" placeholder="서울외지역"
+           class="border rounded px-2 py-1.5">
+    <input name="region_surcharge" type="number" placeholder="지역할증"
+           class="border rounded px-2 py-1.5">
+    <input name="lodging_fee" type="number" placeholder="숙식비"
+           class="border rounded px-2 py-1.5">
+
+    <!-- 자동계산 미리보기 -->
+    <div class="col-span-4 text-xs text-gray-500 flex gap-4 items-center">
+        최종구분: <span id="preview-type" class="font-semibold text-blue-600">-</span>
+        추가시간: <span id="preview-extra" class="font-semibold">-</span>h
+        시간할증: <span id="preview-surcharge" class="font-semibold text-red-500">-</span>원
+    </div>
+    <button type="submit"
+            class="bg-slate-800 text-white rounded py-1.5 text-sm">+ 추가</button>
+</form>
+
+<!-- 자식 명세 목록 -->
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm whitespace-nowrap">
+        <thead>
+            <tr class="text-left border-b text-xs text-gray-500">
+                <th class="py-2">ID</th>
+                <th>운행일</th>
+                <th>구분</th>
+                <th>차종</th>
+                <th>포함내역</th>
+                <th>대수</th>
+                <th class="text-right">단가</th>
+                <th>이용시간</th>
+                <th class="text-right">추가h</th>
+                <th class="text-right">시간할증</th>
+                <th>지역</th>
+                <th class="text-right">지역할증</th>
+                <th class="text-right">숙식비</th>
+                <th class="text-right">소계</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="detail-rows">
+            {% include '_quote_detail_rows.html' %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function updateTimeSurcharge() {
+    var productType = document.getElementById('add-product-type').value;
+    var startTime = document.getElementById('add-start-time').value;
+    var endTime = document.getElementById('add-end-time').value;
+    var unitPrice = document.getElementById('add-unit-price').value || 0;
+
+    if (!startTime || !endTime) {
+        document.getElementById('preview-type').textContent = productType;
+        document.getElementById('preview-extra').textContent = '-';
+        document.getElementById('preview-surcharge').textContent = '-';
+        return;
+    }
+
+    fetch('/api/calc/time_surcharge?product_type=' + productType +
+          '&start_time=' + startTime +
+          '&end_time=' + endTime +
+          '&unit_price=' + unitPrice)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('preview-type').textContent = data.final_type;
+            document.getElementById('preview-extra').textContent = data.extra_time;
+            document.getElementById('preview-surcharge').textContent = data.time_surcharge.toLocaleString();
+        });
+}
+</script>
+{% endblock %}

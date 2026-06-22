@@ -1,0 +1,38 @@
+{% set bill_sub = od.unit_price + od.region_surcharge + od.time_surcharge + od.lodging_fee %}
+{% set pay_sub = od.base_pay + od.driver_time_surcharge + od.fuel_cost + od.toll_fee + od.parking_fee + od.meal_fee + od.lodging_pay %}
+<tr id="od-row-{{ od.id }}" class="border-b hover:bg-gray-50 text-xs">
+    <td class="py-1.5 font-mono text-gray-400">{{ od.id }}</td>
+    <td>{{ od.run_date or '' }}</td>
+    <td>{{ od.vehicle.name if od.vehicle else '' }}</td>
+    <td>{{ od.vehicle.plate_number if od.vehicle and od.vehicle.plate_number else od.plate_number or '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.unit_price) }}</td>
+    <td>{{ od.start_time or '' }}</td>
+    <td>{{ od.end_time or '' }}</td>
+    <td class="text-right">{{ od.extra_time or 0 }}</td>
+    <td class="text-right text-red-500">{{ '{:,}'.format(od.time_surcharge) if od.time_surcharge else '' }}</td>
+    <td>{{ od.region or '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.region_surcharge) if od.region_surcharge else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.lodging_fee) if od.lodging_fee else '' }}</td>
+    <td class="text-right font-semibold bg-blue-50 text-blue-700">{{ '{:,}'.format(bill_sub) }}</td>
+    <td>{{ od.driver.name if od.driver else '' }}</td>
+    <td>{{ od.plate_number or '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.base_pay) if od.base_pay else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.driver_time_surcharge) if od.driver_time_surcharge else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.fuel_cost) if od.fuel_cost else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.toll_fee) if od.toll_fee else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.parking_fee) if od.parking_fee else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.meal_fee) if od.meal_fee else '' }}</td>
+    <td class="text-right">{{ '{:,}'.format(od.lodging_pay) if od.lodging_pay else '' }}</td>
+    <td class="text-right font-semibold bg-orange-50 text-orange-700">{{ '{:,}'.format(pay_sub) }}</td>
+    <td class="text-right space-x-1">
+        <button class="text-blue-600"
+                hx-get="/api/operation_details/{{ od.id }}/edit"
+                hx-target="#od-row-{{ od.id }}"
+                hx-swap="outerHTML">수정</button>
+        <button class="text-red-500"
+                hx-delete="/api/operation_details/{{ od.id }}"
+                hx-target="#op-detail-rows"
+                hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

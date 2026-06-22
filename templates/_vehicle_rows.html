@@ -1,0 +1,5 @@
+{% for v in vehicles %}
+    {% include '_vehicle_row.html' %}
+{% else %}
+<tr><td colspan="6" class="text-center text-gray-400 py-6">등록된 차량이 없습니다</td></tr>
+{% endfor %}

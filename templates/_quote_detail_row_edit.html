@@ -1,0 +1,46 @@
+<tr id="qd-row-{{ qd.id }}" class="border-b bg-yellow-50">
+    <td class="py-1 font-mono text-xs text-gray-400">{{ qd.id }}</td>
+    <td><input name="run_date" value="{{ qd.run_date or '' }}" type="date" class="w-32 border rounded px-1 py-0.5 text-sm"></td>
+    <td>
+        <select name="product_type" class="border rounded px-1 py-0.5 text-sm">
+            {% for pt in ['Full-Day','Half-Day','DropOff','PickUp'] %}
+            <option value="{{ pt }}" {% if qd.product_type == pt %}selected{% endif %}>{{ pt }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select name="vehicle_id" class="border rounded px-1 py-0.5 text-sm">
+            <option value="">-</option>
+           {% for v in vehicles %}
+            <option value="{{ v.id }}" {% if qd.vehicle_id == v.id %}selected{% endif %}>
+                {{ v.name }}{% if v.plate_number %} ({{ v.plate_number }}){% endif %}
+            </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td><input name="includes" value="{{ qd.includes or '' }}" class="w-32 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="qty" type="number" value="{{ qd.qty }}" class="w-12 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="unit_price" type="number" value="{{ qd.unit_price }}" class="w-24 border rounded px-1 py-0.5 text-sm"></td>
+    <td>
+        {% set times = qd.use_time.split('-') if qd.use_time else ['',''] %}
+        <input name="start_time" value="{{ times[0] }}" placeholder="HH:MM" class="w-16 border rounded px-1 py-0.5 text-sm">
+        <input name="end_time" value="{{ times[1] if times|length > 1 else '' }}" placeholder="HH:MM" class="w-16 border rounded px-1 py-0.5 text-sm">
+    </td>
+    <td class="text-center text-xs text-gray-400">자동</td>
+    <td class="text-center text-xs text-gray-400">자동</td>
+    <td><input name="region" value="{{ qd.region or '' }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="region_surcharge" type="number" value="{{ qd.region_surcharge or 0 }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="lodging_fee" type="number" value="{{ qd.lodging_fee or 0 }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td class="text-xs text-gray-400">저장 후 갱신</td>
+    <td class="text-right space-x-1">
+        <button class="text-green-600 text-xs"
+                hx-put="/api/quote_details/{{ qd.id }}"
+                hx-include="closest tr"
+                hx-target="#detail-rows"
+                hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500 text-xs"
+                hx-get="/api/quote_details/{{ qd.id }}/cancel"
+                hx-target="#qd-row-{{ qd.id }}"
+                hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

@@ -1,0 +1,39 @@
+<tr id="driver-row-{{ d.id }}" class="border-b bg-yellow-50 align-top">
+    <td class="py-2">{{ d.id }}</td>
+    <td>
+        <select name="type" id="driver-type-select-{{ d.id }}" class="border rounded px-1 py-0.5 text-sm"
+                onchange="toggleDriverFields('driver-type-select-{{ d.id }}','outsourced-fields-{{ d.id }}')">
+            <option value="대리" {% if d.type == '대리' %}selected{% endif %}>대리</option>
+            <option value="용역" {% if d.type == '용역' %}selected{% endif %}>용역</option>
+        </select>
+    </td>
+    <td><input name="name" value="{{ d.name }}" class="w-24 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="phone" value="{{ d.phone or '' }}" class="w-24 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="team_leader" value="{{ d.team_leader or '' }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="base_pay" type="number" value="{{ d.base_pay or 0 }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="ot_pay" type="number" value="{{ d.ot_pay or 0 }}" class="w-20 border rounded px-1 py-0.5 text-sm"></td>
+    <td colspan="2">
+        <div id="outsourced-fields-{{ d.id }}" class="flex gap-1 {% if d.type != '용역' %}hidden{% endif %}">
+            <select name="vehicle_id" class="border rounded px-1 py-0.5 text-sm">
+                <option value="">차종선택</option>
+                {% for v in vehicles %}
+                <option value="{{ v.id }}" {% if d.vehicle_id == v.id %}selected{% endif %}>{{ v.name }}</option>
+                {% endfor %}
+            </select>
+            <input name="plate_number" value="{{ d.plate_number or '' }}" placeholder="차량번호" class="w-20 border rounded px-1 py-0.5 text-sm">
+        </div>
+    </td>
+    <td><input name="incheon_airport_fee" type="number" value="{{ d.incheon_airport_fee or 0 }}" class="w-16 border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="gimpo_airport_fee" type="number" value="{{ d.gimpo_airport_fee or 0 }}" class="w-16 border rounded px-1 py-0.5 text-sm"></td>
+    <td class="text-right space-x-2">
+        <button class="text-green-600 text-xs"
+                hx-put="/api/drivers/{{ d.id }}"
+                hx-include="closest tr"
+                hx-target="#driver-rows"
+                hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500 text-xs"
+                hx-get="/api/drivers/{{ d.id }}/cancel"
+                hx-target="#driver-row-{{ d.id }}"
+                hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

@@ -1,0 +1,23 @@
+<tr id="vehicle-row-{{ v.id }}" class="border-b bg-yellow-50">
+    <td class="py-2">{{ v.id }}</td>
+    <td><input name="name" value="{{ v.name }}" class="w-full border rounded px-1 py-0.5 text-sm"></td>
+    <td><input name="capacity" type="number" value="{{ v.capacity or '' }}" class="w-16 border rounded px-1 py-0.5 text-sm"></td>
+    <td>
+        <select name="vehicle_type" class="border rounded px-1 py-0.5 text-sm">
+            <option value="자차" {% if v.vehicle_type == '자차' %}selected{% endif %}>자차</option>
+            <option value="타사" {% if v.vehicle_type == '타사' %}selected{% endif %}>타사</option>
+        </select>
+    </td>
+    <td><input name="plate_number" value="{{ v.plate_number or '' }}" class="w-full border rounded px-1 py-0.5 text-sm"></td>
+    <td class="text-right space-x-2">
+        <button class="text-green-600 text-xs"
+                hx-put="/api/vehicles/{{ v.id }}"
+                hx-include="closest tr"
+                hx-target="#vehicle-rows"
+                hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500 text-xs"
+                hx-get="/api/vehicles/{{ v.id }}/cancel"
+                hx-target="#vehicle-row-{{ v.id }}"
+                hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}기사관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">👤 기사관리</h1>
+
+<!-- 검색 -->
+<div class="flex gap-2 mb-4">
+    <input type="text" name="name" placeholder="기사명 검색"
+           class="border rounded px-3 py-1.5 text-sm"
+           hx-get="/api/drivers/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#driver-rows"
+           hx-include="[name='type_filter'],[name='team_leader']">
+
+    <select name="type_filter"
+            class="border rounded px-3 py-1.5 text-sm"
+            hx-get="/api/drivers/"
+            hx-trigger="change"
+            hx-target="#driver-rows"
+            hx-include="[name='name'],[name='team_leader']">
+        <option value="">전체구분</option>
+        <option value="대리">대리</option>
+        <option value="용역">용역</option>
+    </select>
+
+    <input type="text" name="team_leader" placeholder="팀장명 검색"
+           class="border rounded px-3 py-1.5 text-sm"
+           hx-get="/api/drivers/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#driver-rows"
+           hx-include="[name='name'],[name='type_filter']">
+</div>
+
+<div class="grid grid-cols-3 gap-6 items-start">
+
+    <!-- 추가 폼 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">기사 추가</h2>
+        <form id="driver-add-form" hx-post="/api/drivers/" hx-target="#driver-rows" hx-swap="innerHTML" class="space-y-2"
+              hx-on::after-request="this.reset(); toggleDriverFields('driver-type-select','outsourced-fields')">
+            <select name="type" id="driver-type-select" required class="w-full border rounded px-2 py-1.5 text-sm" onchange="toggleDriverFields('driver-type-select','outsourced-fields')">
+                <option value="대리">대리</option>
+                <option value="용역">용역</option>
+            </select>
+            <input name="name" placeholder="기사명" required class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="phone" placeholder="연락처" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="team_leader" placeholder="팀장" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="base_pay" type="number" placeholder="기본급" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="ot_pay" type="number" placeholder="추가시간당 단가" class="w-full border rounded px-2 py-1.5 text-sm">
+
+            <div id="outsourced-fields" class="space-y-2 hidden border-t pt-2">
+                <select name="vehicle_id" class="w-full border rounded px-2 py-1.5 text-sm">
+                    <option value="">차종 선택 (타사)</option>
+                    {% for v in vehicles %}
+                    <option value="{{ v.id }}">{{ v.name }}</option>
+                    {% endfor %}
+                </select>
+                <input name="plate_number" placeholder="고정 차량번호" class="w-full border rounded px-2 py-1.5 text-sm">
+            </div>
+
+            <input name="incheon_airport_fee" type="number" placeholder="인천공항요금" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="gimpo_airport_fee" type="number" placeholder="김포공항요금" class="w-full border rounded px-2 py-1.5 text-sm">
+
+            <button type="submit" class="w-full bg-slate-800 text-white rounded py-1.5 text-sm">+ 추가</button>
+        </form>
+    </div>
+
+    <!-- 목록 -->
+    <div class="col-span-2 bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <table class="w-full text-sm whitespace-nowrap">
+            <thead>
+                <tr class="text-left border-b">
+                    <th class="py-2">ID</th>
+                    <th>구분</th>
+                    <th>이름</th>
+                    <th>연락처</th>
+                    <th>팀장</th>
+                    <th>기본급</th>
+                    <th>OT단가</th>
+                    <th>차종</th>
+                    <th>차량번호</th>
+                    <th>인천</th>
+                    <th>김포</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="driver-rows">
+                {% include '_driver_rows.html' %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// 주의: 템플릿 스코프 이슈로 const/let 대신 var 사용
+function toggleDriverFields(selectId, fieldsId) {
+    var sel = document.getElementById(selectId);
+    var fields = document.getElementById(fieldsId);
+    if (sel.value === '용역') {
+        fields.classList.remove('hidden');
+    } else {
+        fields.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

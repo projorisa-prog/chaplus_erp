@@ -1,0 +1,39 @@
+<div class="bg-white rounded-lg shadow p-4 grid grid-cols-6 gap-3 text-sm items-end">
+    <div>
+        <label class="text-xs text-gray-500">거래처</label>
+        <select name="client_id" class="w-full border rounded px-2 py-1.5 mt-1">
+            {% for c in clients %}
+            <option value="{{ c.id }}" {% if c.id == o.client_id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">행사 시작</label>
+        <input name="start_datetime" value="{{ o.start_datetime or '' }}"
+               placeholder="YYYY-MM-DD HH:MM"
+               class="w-full border rounded px-2 py-1.5 mt-1">
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">행사 종료</label>
+        <input name="end_datetime" value="{{ o.end_datetime or '' }}"
+               placeholder="YYYY-MM-DD"
+               class="w-full border rounded px-2 py-1.5 mt-1">
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">출발지</label>
+        <input name="departure" value="{{ o.departure or '' }}"
+               class="w-full border rounded px-2 py-1.5 mt-1">
+    </div>
+    <div>
+        <label class="text-xs text-gray-500">상태</label>
+        <select name="status" class="w-full border rounded px-2 py-1.5 mt-1">
+            <option value="예약확정" {% if o.status == '예약확정' %}selected{% endif %}>예약확정</option>
+            <option value="운행" {% if o.status == '운행' %}selected{% endif %}>운행</option>
+        </select>
+    </div>
+    <button class="bg-slate-700 text-white rounded px-4 py-1.5 text-sm"
+            hx-put="/api/operations/{{ o.id }}"
+            hx-include="closest div.bg-white"
+            hx-target="#operation-header"
+            hx-swap="innerHTML">저장</button>
+</div>

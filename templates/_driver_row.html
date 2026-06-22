@@ -1,0 +1,24 @@
+<tr id="driver-row-{{ d.id }}" class="border-b hover:bg-gray-50">
+    <td class="py-2">{{ d.id }}</td>
+    <td>{{ d.type }}</td>
+    <td>{{ d.name }}</td>
+    <td>{{ d.phone or '' }}</td>
+    <td>{{ d.team_leader or '' }}</td>
+    <td>{{ d.base_pay or 0 }}</td>
+    <td>{{ d.ot_pay or 0 }}</td>
+    <td>{{ d.vehicle.name if d.vehicle else '' }}</td>
+    <td>{{ d.plate_number or '' }}</td>
+    <td>{{ d.incheon_airport_fee or 0 }}</td>
+    <td>{{ d.gimpo_airport_fee or 0 }}</td>
+    <td class="text-right space-x-2">
+        <button class="text-blue-600 text-xs"
+                hx-get="/api/drivers/{{ d.id }}/edit"
+                hx-target="#driver-row-{{ d.id }}"
+                hx-swap="outerHTML">수정</button>
+        <button class="text-red-600 text-xs"
+                hx-delete="/api/drivers/{{ d.id }}"
+                hx-target="#driver-rows"
+                hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

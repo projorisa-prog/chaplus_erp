@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}거래처관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">🏢 거래처관리</h1>
+
+<!-- 검색 -->
+<div class="flex gap-2 mb-4">
+    <input type="text" name="name" placeholder="거래처명 검색"
+           class="border rounded px-3 py-1.5 text-sm"
+           hx-get="/api/clients/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#client-rows"
+           hx-include="[name='vat_type_filter']">
+
+    <select name="vat_type_filter"
+            class="border rounded px-3 py-1.5 text-sm"
+            hx-get="/api/clients/"
+            hx-trigger="change"
+            hx-target="#client-rows"
+            hx-include="[name='name']">
+        <option value="">전체 부가세구분</option>
+        <option value="포함">포함</option>
+        <option value="별도">별도</option>
+        <option value="면세">면세</option>
+    </select>
+</div>
+
+<div class="grid grid-cols-3 gap-6 items-start">
+
+    <!-- 추가 폼 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">거래처 추가</h2>
+        <form hx-post="/api/clients/" hx-target="#client-rows" hx-swap="innerHTML" class="space-y-2"
+              hx-on::after-request="this.reset()">
+            <input name="name" placeholder="거래처명" required class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="business_no" placeholder="사업자번호" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="ceo_name" placeholder="대표자" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="business_type" placeholder="업태" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="business_item" placeholder="종목" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="manager_name" placeholder="담당자" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="phone" placeholder="전화" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="email" type="email" placeholder="이메일" class="w-full border rounded px-2 py-1.5 text-sm">
+            <input name="tax_invoice_email" type="email" placeholder="세금계산서 이메일" class="w-full border rounded px-2 py-1.5 text-sm">
+            <select name="vat_type" required class="w-full border rounded px-2 py-1.5 text-sm">
+                <option value="포함">포함</option>
+                <option value="별도">별도</option>
+                <option value="면세">면세</option>
+            </select>
+            <button type="submit" class="w-full bg-slate-800 text-white rounded py-1.5 text-sm">+ 추가</button>
+        </form>
+    </div>
+
+    <!-- 목록 -->
+    <div class="col-span-2 bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <table class="w-full text-sm whitespace-nowrap">
+            <thead>
+                <tr class="text-left border-b">
+                    <th class="py-2">ID</th>
+                    <th>거래처명</th>
+                    <th>사업자번호</th>
+                    <th>대표자</th>
+                    <th>담당자</th>
+                    <th>전화</th>
+                    <th>이메일</th>
+                    <th>부가세</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="client-rows">
+                {% include '_client_rows.html' %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
