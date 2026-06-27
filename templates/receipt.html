@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}지출증빙 - 차플러스 ERP{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">🧾 지출증빙</h1>
+
+<form method="get" class="bg-white rounded-lg shadow p-3 mb-4 flex flex-wrap gap-2 items-center text-sm">
+    <select name="year" class="border rounded px-2 py-1.5">
+        {% for y in years %}<option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}년</option>{% endfor %}
+    </select>
+    <div class="flex gap-1">
+        {% for m in months %}
+        <a href="?year={{ year }}&month={{ m }}&receipt_type={{ rtype }}&payment_account_id={{ pa_id }}"
+           class="px-2 py-1 rounded text-xs border {% if m==month %}bg-slate-800 text-white{% else %}hover:bg-gray-100{% endif %}">{{ m }}</a>
+        {% endfor %}
+    </div>
+    <select name="receipt_type" class="border rounded px-2 py-1.5 ml-2">
+        <option value="">전체 증빙</option>
+        {% for rt in ['카드영수증','세금계산서','현금영수증','없음'] %}
+        <option value="{{ rt }}" {% if rtype==rt %}selected{% endif %}>{{ rt }}</option>
+        {% endfor %}
+    </select>
+    <select name="payment_account_id" class="border rounded px-2 py-1.5">
+        <option value="">전체 결제수단</option>
+        {% for a in accounts %}
+        <option value="{{ a.id }}" {% if pa_id==a.id %}selected{% endif %}>{{ a.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="bg-slate-800 text-white px-4 py-1.5 rounded">조회</button>
+    <a href="/receipt" class="border px-4 py-1.5 rounded hover:bg-gray-50">초기화</a>
+    <a id="excel-link" href="/receipt/export?year={{ year }}&month={{ month }}&receipt_type={{ rtype }}&payment_account_id={{ pa_id }}"
+       class="ml-auto bg-green-700 text-white px-4 py-1.5 rounded">
+        📥 엑셀 다운로드
+    </a>
+</form>
+
+<!-- 집계 카드 -->
+<div class="grid grid-cols-5 gap-3 mb-6">
+    {% for rt, amt in receipt_sums.items() %}
+    <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500 mb-1">{{ rt }}</div>
+        <div class="text-base font-bold text-red-600">{{ '{:,}'.format(amt) }}원</div>
+    </div>
+    {% endfor %}
+    <div class="bg-slate-800 text-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-slate-300 mb-1">지출 합계</div>
+        <div class="text-base font-bold">{{ '{:,}'.format(total) }}원</div>
+    </div>
+</div>
+
+<!-- 결제수단별 집계 -->
+{% if account_sums %}
+<div class="bg-white rounded-lg shadow p-4 mb-4">
+    <h2 class="font-semibold text-sm mb-3">결제수단별 집계</h2>
+    <div class="flex gap-4 flex-wrap text-sm">
+        {% for an, amt in account_sums.items() %}
+        <div class="flex items-center gap-2">
+            <span class="text-gray-500">{{ an }}</span>
+            <span class="font-semibold text-red-600">{{ '{:,}'.format(amt) }}원</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 지출 명세 -->
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm whitespace-nowrap border-collapse">
+        <thead>
+            <tr class="bg-gray-100 text-left text-xs text-gray-600">
+                <th class="px-2 py-2">ID</th>
+                <th class="px-2 py-2">날짜</th>
+                <th class="px-2 py-2 text-right">금액</th>
+                <th class="px-2 py-2">결제수단</th>
+                <th class="px-2 py-2">계정과목</th>
+                <th class="px-2 py-2">기사</th>
+                <th class="px-2 py-2">증빙</th>
+                <th class="px-2 py-2">메모</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr class="border-b hover:bg-gray-50 text-xs">
+                <td class="px-2 py-1.5 font-mono text-gray-400">{{ e.id }}</td>
+                <td class="px-2">{{ e.date }}</td>
+                <td class="px-2 text-right font-semibold text-red-600">{{ '{:,}'.format(e.amount) }}</td>
+                <td class="px-2">{{ e.payment_account.name if e.payment_account else '' }}</td>
+                <td class="px-2">{{ e.account_subject.name if e.account_subject else '' }}</td>
+                <td class="px-2">{{ e.driver.name if e.driver else '' }}</td>
+                <td class="px-2">
+                    <span class="px-1.5 py-0.5 rounded text-xs
+                        {% if e.receipt_type=='카드영수증' %}bg-blue-100 text-blue-700
+                        {% elif e.receipt_type=='세금계산서' %}bg-green-100 text-green-700
+                        {% elif e.receipt_type=='현금영수증' %}bg-yellow-100 text-yellow-700
+                        {% else %}bg-gray-100 text-gray-500{% endif %}">
+                        {{ e.receipt_type or '없음' }}
+                    </span>
+                </td>
+                <td class="px-2">{{ e.memo or '' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-center text-gray-400 py-8">해당 기간 지출 내역이 없습니다.</td></tr>
+            {% endfor %}
+            {% if entries %}
+            <tr class="bg-slate-800 text-white font-bold text-sm">
+                <td colspan="2" class="px-2 py-2 text-right">합계</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(total) }}원</td>
+                <td colspan="5"></td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

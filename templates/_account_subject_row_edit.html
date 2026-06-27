@@ -1,0 +1,27 @@
+<tr id="as-row-{{ s.id }}" class="border-b bg-yellow-50 text-sm">
+    <td class="px-2 py-1 text-gray-400">{{ s.id }}</td>
+    <td class="px-1"><input name="name" value="{{ s.name }}" class="w-24 border rounded px-1 py-0.5"></td>
+    <td class="px-1">
+        <select name="type" class="border rounded px-1 py-0.5">
+            <option value="수입" {% if s.type=='수입' %}selected{% endif %}>수입</option>
+            <option value="지출" {% if s.type=='지출' %}selected{% endif %}>지출</option>
+        </select>
+    </td>
+    <td class="px-1">
+        <select name="is_fixed" class="border rounded px-1 py-0.5">
+            <option value="false" {% if not s.is_fixed %}selected{% endif %}>일반</option>
+            <option value="true" {% if s.is_fixed %}selected{% endif %}>고정지출</option>
+        </select>
+    </td>
+    <td class="px-1"><input name="fixed_amount" type="number" value="{{ s.fixed_amount or 0 }}" class="w-24 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="sort_order" type="number" value="{{ s.sort_order }}" class="w-12 border rounded px-1 py-0.5"></td>
+    <td class="px-2 text-right space-x-1">
+        <button class="text-green-600 text-xs"
+                hx-put="/api/account_subjects/{{ s.id }}"
+                hx-include="closest tr"
+                hx-target="#as-rows" hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500 text-xs"
+                hx-get="/api/account_subjects/{{ s.id }}/cancel"
+                hx-target="#as-row-{{ s.id }}" hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

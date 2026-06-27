@@ -42,9 +42,35 @@ def create_app():
     from routes.operations import operations_bp
     app.register_blueprint(operations_bp)
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+    from routes.billing import billing_bp
+    app.register_blueprint(billing_bp)
+
+    from routes.payment import payment_bp
+    app.register_blueprint(payment_bp)
+
+    from routes.ledger import ledger_bp
+    app.register_blueprint(ledger_bp)
+
+    from routes.account_subjects import account_subjects_bp
+    app.register_blueprint(account_subjects_bp)
+
+    from routes.payment_accounts import payment_accounts_bp
+    app.register_blueprint(payment_accounts_bp)
+
+    from routes.client_ledger import client_ledger_bp
+    app.register_blueprint(client_ledger_bp)
+
+    from routes.driver_ledger import driver_ledger_bp
+    app.register_blueprint(driver_ledger_bp)
+
+    from routes.receipt import receipt_bp
+    app.register_blueprint(receipt_bp)
+
+    from routes.dashboard import dashboard_bp
+    app.register_blueprint(dashboard_bp)
+
+    from routes.settings import settings_bp
+    app.register_blueprint(settings_bp)
 
     return app
 

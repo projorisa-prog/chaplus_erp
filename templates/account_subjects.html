@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}계정과목 - 차플러스 ERP{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">📂 계정과목</h1>
+<div class="grid grid-cols-3 gap-6 items-start">
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">계정과목 추가</h2>
+        <form hx-post="/api/account_subjects/" hx-target="#as-rows" hx-swap="innerHTML"
+              hx-on::after-request="this.reset()" class="space-y-2 text-sm">
+            <input name="name" placeholder="과목명" required class="w-full border rounded px-2 py-1.5">
+            <select name="type" class="w-full border rounded px-2 py-1.5">
+                <option value="수입">수입</option>
+                <option value="지출">지출</option>
+            </select>
+            <select name="is_fixed" class="w-full border rounded px-2 py-1.5">
+                <option value="false">일반</option>
+                <option value="true">고정지출</option>
+            </select>
+            <input name="fixed_amount" type="number" placeholder="고정금액 (고정지출만)"
+                   class="w-full border rounded px-2 py-1.5">
+            <input name="sort_order" type="number" placeholder="정렬순서" value="0"
+                   class="w-full border rounded px-2 py-1.5">
+            <button type="submit" class="w-full bg-slate-800 text-white rounded py-1.5">+ 추가</button>
+        </form>
+    </div>
+    <div class="col-span-2 bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-left text-xs text-gray-600">
+                    <th class="px-2 py-2">ID</th>
+                    <th class="px-2 py-2">과목명</th>
+                    <th class="px-2 py-2">구분</th>
+                    <th class="px-2 py-2">고정지출</th>
+                    <th class="px-2 py-2 text-right">고정금액</th>
+                    <th class="px-2 py-2">정렬</th>
+                    <th class="px-2 py-2"></th>
+                </tr>
+            </thead>
+            <tbody id="as-rows">{% include '_account_subject_rows.html' %}</tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

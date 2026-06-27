@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}기사원장 - 차플러스 ERP{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">📒 기사원장</h1>
+
+<form method="get" class="bg-white rounded-lg shadow p-3 mb-4 flex flex-wrap gap-2 items-center text-sm">
+    <select name="year" class="border rounded px-2 py-1.5">
+        {% for y in years %}<option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}년</option>{% endfor %}
+    </select>
+    <div class="flex gap-1">
+        {% for m in months %}
+        <a href="?year={{ year }}&month={{ m }}&driver_id={{ driver_id }}"
+           class="px-2 py-1 rounded text-xs border {% if m==month %}bg-slate-800 text-white{% else %}hover:bg-gray-100{% endif %}">{{ m }}</a>
+        {% endfor %}
+    </div>
+    <select name="driver_id" class="border rounded px-2 py-1.5 ml-2">
+        <option value="">기사 선택</option>
+        {% for d in drivers %}
+        <option value="{{ d.id }}" {% if d.id==driver_id %}selected{% endif %}>{{ d.name }} ({{ d.type }})</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="bg-slate-800 text-white px-4 py-1.5 rounded">조회</button>
+</form>
+
+{% if driver_id %}
+<!-- 요약 카드 -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">지급 합계</div>
+        <div class="text-xl font-bold text-orange-600">{{ '{:,}'.format(pay_total) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">실지급 합계</div>
+        <div class="text-xl font-bold text-green-600">{{ '{:,}'.format(payment_total) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">미지급 (지급-실지급)</div>
+        <div class="text-xl font-bold {% if unpaid <= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            {{ '{:,}'.format(unpaid) }}원
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 gap-6">
+    <!-- 지급 명세 -->
+    <div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <h2 class="font-semibold mb-3">운행 지급 명세</h2>
+        <table class="w-full text-xs whitespace-nowrap border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-left text-gray-600">
+                    <th class="px-2 py-1.5">운행일</th>
+                    <th class="px-2 py-1.5">거래처</th>
+                    <th class="px-2 py-1.5">구분</th>
+                    <th class="px-2 py-1.5 text-right">기본급</th>
+                    <th class="px-2 py-1.5 text-right">할증</th>
+                    <th class="px-2 py-1.5 text-right">경비</th>
+                    <th class="px-2 py-1.5 text-right">소계</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in pay_rows %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-2 py-1">{{ r.run_date }}</td>
+                    <td class="px-2">{{ r.client }}</td>
+                    <td class="px-2">
+                        <span class="px-1.5 py-0.5 rounded
+                            {% if r.product_type=='Full-Day' %}bg-blue-100 text-blue-700
+                            {% elif r.product_type=='Half-Day' %}bg-purple-100 text-purple-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ r.product_type }}
+                        </span>
+                    </td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(r.base_pay) if r.base_pay else '' }}</td>
+                    <td class="px-2 text-right text-red-500">{{ '{:,}'.format(r.driver_time_surcharge) if r.driver_time_surcharge else '' }}</td>
+                    <td class="px-2 text-right text-gray-500">
+                        {{ '{:,}'.format(r.fuel_cost+r.toll_fee+r.parking_fee+r.meal_fee+r.lodging_pay) if (r.fuel_cost+r.toll_fee+r.parking_fee+r.meal_fee+r.lodging_pay) else '' }}
+                    </td>
+                    <td class="px-2 text-right font-semibold text-orange-700">{{ '{:,}'.format(r.sub) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-gray-400 py-4">운행 데이터 없음</td></tr>
+                {% endfor %}
+                {% if pay_rows %}
+                <tr class="bg-orange-50 font-bold border-t">
+                    <td colspan="3" class="px-2 py-1.5 text-right">소계</td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(pay_sums.base_pay) }}</td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(pay_sums.driver_time_surcharge) }}</td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(pay_sums.fuel_cost+pay_sums.toll_fee+pay_sums.parking_fee+pay_sums.meal_fee+pay_sums.lodging_pay) }}</td>
+                    <td class="px-2 text-right text-orange-700">{{ '{:,}'.format(pay_total) }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 실지급 내역 -->
+    <div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <h2 class="font-semibold mb-3">실지급 내역</h2>
+        <table class="w-full text-xs whitespace-nowrap border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-left text-gray-600">
+                    <th class="px-2 py-1.5">날짜</th>
+                    <th class="px-2 py-1.5 text-right">금액</th>
+                    <th class="px-2 py-1.5">결제수단</th>
+                    <th class="px-2 py-1.5">메모</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in payment_rows %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-2 py-1">{{ r.date }}</td>
+                    <td class="px-2 text-right font-semibold text-green-700">{{ '{:,}'.format(r.amount) }}</td>
+                    <td class="px-2">{{ r.account }}</td>
+                    <td class="px-2">{{ r.memo }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-gray-400 py-4">실지급 내역 없음</td></tr>
+                {% endfor %}
+                {% if payment_rows %}
+                <tr class="bg-green-50 font-bold border-t">
+                    <td class="px-2 py-1.5 text-right">합계</td>
+                    <td class="px-2 text-right text-green-700">{{ '{:,}'.format(payment_total) }}</td>
+                    <td colspan="2"></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow p-12 text-center text-gray-400">
+    위에서 기사를 선택하면 원장을 조회할 수 있습니다.
+</div>
+{% endif %}
+{% endblock %}

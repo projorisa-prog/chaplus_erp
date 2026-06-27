@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}지급관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">💳 지급관리</h1>
+
+<!-- 검색 툴바 -->
+<form method="get" class="bg-white rounded-lg shadow p-3 mb-4 flex flex-wrap gap-2 items-center text-sm">
+    <select name="year" class="border rounded px-2 py-1.5">
+        {% for y in years %}
+        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}년</option>
+        {% endfor %}
+    </select>
+    <div class="flex gap-1">
+        {% for m in months %}
+        <a href="?year={{ year }}&month={{ m }}&q={{ q }}&team={{ team }}"
+           class="px-2 py-1 rounded text-xs border
+               {% if m == month %}bg-slate-800 text-white{% else %}hover:bg-gray-100{% endif %}">
+            {{ m }}
+        </a>
+        {% endfor %}
+    </div>
+    <select name="team" class="border rounded px-2 py-1.5 ml-2">
+        <option value="">전체 팀장</option>
+        {% for tl in team_leaders %}
+        <option value="{{ tl }}" {% if tl == team %}selected{% endif %}>{{ tl }}</option>
+        {% endfor %}
+    </select>
+    <input name="q" value="{{ q }}" placeholder="거래처명 검색"
+           class="border rounded px-2 py-1.5">
+    <button type="submit" class="bg-slate-800 text-white px-4 py-1.5 rounded">조회</button>
+    <a href="/payment" class="border px-4 py-1.5 rounded hover:bg-gray-50">초기화</a>
+</form>
+
+<!-- 팀장별 집계 -->
+{% if team_totals %}
+<div class="grid grid-cols-4 gap-3 mb-6">
+    {% for tl, total in team_totals.items() %}
+    <div class="bg-white rounded-lg shadow p-3">
+        <div class="text-xs text-gray-500 mb-1">{{ tl }} 팀</div>
+        <div class="text-lg font-bold text-orange-600">{{ '{:,}'.format(total) }}원</div>
+    </div>
+    {% endfor %}
+    <div class="bg-slate-800 text-white rounded-lg shadow p-3">
+        <div class="text-xs text-slate-300 mb-1">전체 지급 합계</div>
+        <div class="text-lg font-bold">{{ '{:,}'.format(grand_pay) }}원</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 기사별 상세 -->
+{% for did, t in driver_totals.items() %}
+<div class="bg-white rounded-lg shadow p-4 mb-4 overflow-x-auto">
+    <div class="flex items-center gap-3 mb-3">
+        <span class="font-bold text-base">{{ t.name }}</span>
+        <span class="text-xs px-2 py-0.5 rounded
+            {% if t.type == '용역' %}bg-green-100 text-green-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ t.type }}
+        </span>
+        {% if t.team_leader %}
+        <span class="text-xs text-gray-400">팀장: {{ t.team_leader }}</span>
+        {% endif %}
+        <span class="ml-auto font-bold text-orange-600">합계: {{ '{:,}'.format(t.total) }}원</span>
+    </div>
+    <table class="w-full text-xs whitespace-nowrap border-collapse">
+        <thead>
+            <tr class="bg-gray-100 text-left text-gray-600">
+                <th class="px-2 py-1.5">운행ID</th>
+                <th class="px-2 py-1.5">운행일</th>
+                <th class="px-2 py-1.5">거래처</th>
+                <th class="px-2 py-1.5">구분</th>
+                <th class="px-2 py-1.5 text-right">기본급</th>
+                <th class="px-2 py-1.5 text-right">기사할증</th>
+                <th class="px-2 py-1.5 text-right">유류</th>
+                <th class="px-2 py-1.5 text-right">통행</th>
+                <th class="px-2 py-1.5 text-right">주차</th>
+                <th class="px-2 py-1.5 text-right">식대</th>
+                <th class="px-2 py-1.5 text-right">숙식</th>
+                <th class="px-2 py-1.5 text-right bg-orange-50">소계</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in t.details %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-2 py-1 font-mono text-blue-600">{{ d.order_id }}</td>
+                <td class="px-2">{{ d.run_date }}</td>
+                <td class="px-2">{{ d.client }}</td>
+                <td class="px-2">
+                    <span class="px-1.5 py-0.5 rounded
+                        {% if d.product_type == 'Full-Day' %}bg-blue-100 text-blue-700
+                        {% elif d.product_type == 'Half-Day' %}bg-purple-100 text-purple-700
+                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                        {{ d.product_type }}
+                    </span>
+                </td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.base_pay) if d.base_pay else '' }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.driver_time_surcharge) if d.driver_time_surcharge else '' }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.fuel_cost) if d.fuel_cost else '' }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.toll_fee) if d.toll_fee else '' }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.parking_fee) if d.parking_fee else '' }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.meal_fee) if d.meal_fee else '' }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(d.lodging_pay) if d.lodging_pay else '' }}</td>
+                <td class="px-2 text-right font-semibold bg-orange-50 text-orange-700">{{ '{:,}'.format(d.sub) }}</td>
+            </tr>
+            {% endfor %}
+            <!-- 기사 소계 -->
+            <tr class="bg-orange-50 font-semibold border-t text-xs">
+                <td colspan="4" class="px-2 py-1 text-right text-gray-500">{{ t.name }} 소계</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.base_pay) }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.driver_time_surcharge) }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.fuel_cost) }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.toll_fee) }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.parking_fee) }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.meal_fee) }}</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(t.lodging_pay) }}</td>
+                <td class="px-2 text-right text-orange-700">{{ '{:,}'.format(t.total) }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow p-8 text-center text-gray-400">
+    해당 기간 지급 데이터가 없습니다.
+</div>
+{% endfor %}
+
+<!-- Grand Total -->
+{% if driver_totals %}
+<div class="bg-slate-800 text-white rounded-lg p-4 text-right font-bold">
+    {{ year }}년 {{ month }}월 전체 지급 합계:
+    <span class="text-xl ml-3">{{ '{:,}'.format(grand_pay) }}원</span>
+</div>
+{% endif %}
+{% endblock %}

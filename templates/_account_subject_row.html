@@ -1,0 +1,17 @@
+<tr id="as-row-{{ s.id }}" class="border-b hover:bg-gray-50 text-sm">
+    <td class="px-2 py-1.5 text-gray-400">{{ s.id }}</td>
+    <td class="px-2">{{ s.name }}</td>
+    <td class="px-2">{{ s.type }}</td>
+    <td class="px-2">{% if s.is_fixed %}<span class="text-green-600">고정</span>{% else %}-{% endif %}</td>
+    <td class="px-2 text-right">{{ '{:,}'.format(s.fixed_amount) if s.fixed_amount else '' }}</td>
+    <td class="px-2">{{ s.sort_order }}</td>
+    <td class="px-2 text-right space-x-1">
+        <button class="text-blue-600 text-xs"
+                hx-get="/api/account_subjects/{{ s.id }}/edit"
+                hx-target="#as-row-{{ s.id }}" hx-swap="outerHTML">수정</button>
+        <button class="text-red-500 text-xs"
+                hx-delete="/api/account_subjects/{{ s.id }}"
+                hx-target="#as-rows" hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

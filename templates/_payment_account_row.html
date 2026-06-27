@@ -1,0 +1,22 @@
+<tr id="pa-row-{{ a.id }}" class="border-b hover:bg-gray-50 text-sm">
+    <td class="px-2 py-1.5 font-mono text-gray-400">{{ a.id }}</td>
+    <td class="px-2">{{ a.type }}</td>
+    <td class="px-2 font-semibold">{{ a.name }}</td>
+    <td class="px-2 font-mono text-xs">{{ a.number or '' }}</td>
+    <td class="px-2">{{ a.bank_name or '' }}</td>
+    <td class="px-2">{{ a.holder or '' }}</td>
+    <td class="px-2">
+        {% if a.is_active %}<span class="text-green-600">사용중</span>
+        {% else %}<span class="text-gray-400">사용안함</span>{% endif %}
+    </td>
+    <td class="px-2 text-xs text-gray-500">{{ a.memo or '' }}</td>
+    <td class="px-2 text-right space-x-1">
+        <button class="text-blue-600 text-xs"
+                hx-get="/api/payment_accounts/{{ a.id }}/edit"
+                hx-target="#pa-row-{{ a.id }}" hx-swap="outerHTML">수정</button>
+        <button class="text-red-500 text-xs"
+                hx-delete="/api/payment_accounts/{{ a.id }}"
+                hx-target="#pa-rows" hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

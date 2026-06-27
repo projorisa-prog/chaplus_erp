@@ -1,0 +1,42 @@
+<div class="bg-white rounded-lg shadow p-6">
+    {% if saved %}
+    <div class="mb-4 px-4 py-2 bg-green-100 text-green-700 rounded text-sm">
+        ✅ 저장되었습니다.
+    </div>
+    {% endif %}
+
+    <form hx-post="/api/settings"
+          hx-target="#settings-form-wrap"
+          hx-swap="innerHTML"
+          class="space-y-4">
+
+        {% set sections = [
+            ('회사 정보', ['company_name','ceo_name','business_no','address','phone','email']),
+            ('입금 계좌', ['bank_name','bank_account','bank_holder']),
+            ('운행 기준', ['fullday_base_hours','halfday_threshold','default_vat_type']),
+        ] %}
+
+        {% for section_title, section_keys in sections %}
+        <div class="border-b pb-4">
+            <h3 class="text-sm font-semibold text-gray-500 mb-3">{{ section_title }}</h3>
+            <div class="space-y-2">
+                {% for key, label, default in keys %}
+                {% if key in section_keys %}
+                <div class="flex items-center gap-3">
+                    <label class="w-36 text-sm text-gray-600 flex-shrink-0">{{ label }}</label>
+                    <input name="{{ key }}"
+                           value="{{ rows.get(key, default) }}"
+                           class="flex-1 border rounded px-3 py-1.5 text-sm">
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <button type="submit"
+                class="bg-slate-800 text-white rounded px-6 py-2 text-sm">
+            💾 저장
+        </button>
+    </form>
+</div>

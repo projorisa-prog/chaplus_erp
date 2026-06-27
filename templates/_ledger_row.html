@@ -1,0 +1,33 @@
+<tr id="ledger-row-{{ e.id }}" class="border-b hover:bg-gray-50 text-xs">
+    <td class="px-2 py-1.5 font-mono text-gray-400">{{ e.id }}</td>
+    <td class="px-2">{{ e.date }}</td>
+    <td class="px-2">
+        <span class="px-1.5 py-0.5 rounded
+            {% if e.type == '입금' %}bg-blue-100 text-blue-700{% else %}bg-red-100 text-red-600{% endif %}">
+            {{ e.type }}
+        </span>
+    </td>
+    <td class="px-2 text-right font-semibold
+        {% if e.type == '입금' %}text-blue-700{% else %}text-red-600{% endif %}">
+        {{ '{:,}'.format(e.amount) }}
+    </td>
+    <td class="px-2">{{ e.payment_account.name if e.payment_account else '' }}</td>
+    <td class="px-2">{{ e.account_subject.name if e.account_subject else '' }}</td>
+    <td class="px-2">
+        {{ e.client.name if e.client else '' }}
+        {{ e.driver.name if e.driver else '' }}
+    </td>
+    <td class="px-2">{{ e.receipt_type or '' }}</td>
+    <td class="px-2">{{ e.memo or '' }}</td>
+    <td class="px-2 text-right space-x-1">
+        <button class="text-blue-600"
+                hx-get="/api/ledger/{{ e.id }}/edit"
+                hx-target="#ledger-row-{{ e.id }}"
+                hx-swap="outerHTML">수정</button>
+        <button class="text-red-500"
+                hx-delete="/api/ledger/{{ e.id }}"
+                hx-target="#ledger-rows"
+                hx-swap="innerHTML"
+                hx-confirm="삭제하시겠습니까?">삭제</button>
+    </td>
+</tr>

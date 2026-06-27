@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}거래처원장 - 차플러스 ERP{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">📒 거래처원장</h1>
+
+<form method="get" class="bg-white rounded-lg shadow p-3 mb-4 flex flex-wrap gap-2 items-center text-sm">
+    <select name="year" class="border rounded px-2 py-1.5">
+        {% for y in years %}<option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}년</option>{% endfor %}
+    </select>
+    <div class="flex gap-1">
+        {% for m in months %}
+        <a href="?year={{ year }}&month={{ m }}&client_id={{ client_id }}"
+           class="px-2 py-1 rounded text-xs border {% if m==month %}bg-slate-800 text-white{% else %}hover:bg-gray-100{% endif %}">{{ m }}</a>
+        {% endfor %}
+    </div>
+    <select name="client_id" class="border rounded px-2 py-1.5 ml-2">
+        <option value="">거래처 선택</option>
+        {% for c in clients %}
+        <option value="{{ c.id }}" {% if c.id==client_id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="bg-slate-800 text-white px-4 py-1.5 rounded">조회</button>
+</form>
+
+{% if client_id %}
+<!-- 요약 카드 -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">청구 합계</div>
+        <div class="text-xl font-bold text-blue-700">{{ '{:,}'.format(bill_total) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">입금 합계</div>
+        <div class="text-xl font-bold text-green-600">{{ '{:,}'.format(income_total) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">미수금 (청구-입금)</div>
+        <div class="text-xl font-bold {% if balance <= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            {{ '{:,}'.format(balance) }}원
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 gap-6">
+    <!-- 청구 명세 -->
+    <div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <h2 class="font-semibold mb-3">운행 청구 명세</h2>
+        <table class="w-full text-xs whitespace-nowrap border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-left text-gray-600">
+                    <th class="px-2 py-1.5">운행ID</th>
+                    <th class="px-2 py-1.5">운행일</th>
+                    <th class="px-2 py-1.5">구분</th>
+                    <th class="px-2 py-1.5">차종</th>
+                    <th class="px-2 py-1.5 text-right">단가</th>
+                    <th class="px-2 py-1.5 text-right">할증</th>
+                    <th class="px-2 py-1.5 text-right">소계</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in bill_rows %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-2 py-1 font-mono text-blue-600">{{ r.order_id }}</td>
+                    <td class="px-2">{{ r.run_date }}</td>
+                    <td class="px-2">
+                        <span class="px-1.5 py-0.5 rounded
+                            {% if r.product_type=='Full-Day' %}bg-blue-100 text-blue-700
+                            {% elif r.product_type=='Half-Day' %}bg-purple-100 text-purple-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ r.product_type }}
+                        </span>
+                    </td>
+                    <td class="px-2">{{ r.vehicle }}</td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(r.unit_price) }}</td>
+                    <td class="px-2 text-right text-red-500">
+                        {{ '{:,}'.format(r.region_surcharge + r.time_surcharge + r.lodging_fee) if (r.region_surcharge + r.time_surcharge + r.lodging_fee) else '' }}
+                    </td>
+                    <td class="px-2 text-right font-semibold text-blue-700">{{ '{:,}'.format(r.sub) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-gray-400 py-4">운행 데이터 없음</td></tr>
+                {% endfor %}
+                {% if bill_rows %}
+                <tr class="bg-blue-50 font-bold border-t">
+                    <td colspan="6" class="px-2 py-1.5 text-right">합계</td>
+                    <td class="px-2 text-right text-blue-700">{{ '{:,}'.format(bill_total) }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 입금 내역 -->
+    <div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <h2 class="font-semibold mb-3">입금 내역</h2>
+        <table class="w-full text-xs whitespace-nowrap border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-left text-gray-600">
+                    <th class="px-2 py-1.5">날짜</th>
+                    <th class="px-2 py-1.5 text-right">금액</th>
+                    <th class="px-2 py-1.5">결제수단</th>
+                    <th class="px-2 py-1.5">증빙</th>
+                    <th class="px-2 py-1.5">메모</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in income_rows %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-2 py-1">{{ r.date }}</td>
+                    <td class="px-2 text-right font-semibold text-green-700">{{ '{:,}'.format(r.amount) }}</td>
+                    <td class="px-2">{{ r.account }}</td>
+                    <td class="px-2">{{ r.receipt }}</td>
+                    <td class="px-2">{{ r.memo }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-gray-400 py-4">입금 내역 없음</td></tr>
+                {% endfor %}
+                {% if income_rows %}
+                <tr class="bg-green-50 font-bold border-t">
+                    <td class="px-2 py-1.5 text-right">합계</td>
+                    <td class="px-2 text-right text-green-700">{{ '{:,}'.format(income_total) }}</td>
+                    <td colspan="3"></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<div class="bg-white rounded-lg shadow p-12 text-center text-gray-400">
+    위에서 거래처를 선택하면 원장을 조회할 수 있습니다.
+</div>
+{% endif %}
+{% endblock %}

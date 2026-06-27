@@ -37,3 +37,19 @@
             hx-target="#operation-header"
             hx-swap="innerHTML">저장</button>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startInput = document.querySelector('input[name="start_datetime"]');
+    const endInput = document.querySelector('input[name="end_datetime"]');
+
+    startInput.addEventListener('input', function(e) {
+        const startValue = e.target.value;
+        
+        // 종료일이 비어있고, 시작일이 10자리(YYYY-MM-DD) 이상 입력되었을 때만 작동
+        if (!endInput.value && startValue.length >= 10) {
+            endInput.value = startValue.substring(0, 10);
+        }
+    });
+});
+</script>

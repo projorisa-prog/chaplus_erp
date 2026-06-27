@@ -1,0 +1,170 @@
+<form id="op-detail-form"
+      hx-post="/api/operations/{{ o.id }}/details"
+      hx-target="#op-detail-rows"
+      hx-swap="innerHTML"
+      hx-on::after-request="resetOpForm()"
+      class="bg-white rounded-lg shadow p-4 text-sm space-y-3">
+
+    <input type="hidden" name="edit_id" value="">
+    <div id="form-mode-label" class="text-xs font-semibold text-blue-600">+ 명세 추가</div>
+
+    <!-- 청구 -->
+    <div class="grid grid-cols-6 gap-2">
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">운행일</label>
+            <input name="run_date" type="date" required class="border rounded px-2 py-1.5">
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">구분</label>
+            <select name="product_type" id="op-product-type" class="border rounded px-2 py-1.5" onchange="opUpdateCalc()">
+                <option value="Full-Day">Full-Day</option>
+                <option value="Half-Day">Half-Day</option>
+                <option value="DropOff">DropOff</option>
+                <option value="PickUp">PickUp</option>
+            </select>
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">차종</label>
+            <select name="vehicle_id" id="op-vehicle-id" class="border rounded px-2 py-1.5" onchange="opVehicleChanged()">
+                <option value="">차종 선택</option>
+                {% for v in vehicles %}
+                <option value="{{ v.id }}" data-plate="{{ v.plate_number or '' }}">
+                    {{ v.name }}{% if v.plate_number %} ({{ v.plate_number }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">단가</label>
+            <input name="unit_price" id="op-unit-price" type="number" class="border rounded px-2 py-1.5" oninput="opUpdateCalc()">
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">시작 HH:MM</label>
+            <input name="start_time" id="op-start-time" placeholder="09:00" class="border rounded px-2 py-1.5" oninput="opUpdateCalc()">
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">종료 HH:MM</label>
+            <input name="end_time" id="op-end-time" placeholder="19:00" class="border rounded px-2 py-1.5" oninput="opUpdateCalc()">
+        </div>
+    </div>
+    <div class="grid grid-cols-6 gap-2">
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">서울외지역</label>
+            <input name="region" class="border rounded px-2 py-1.5">
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">지역할증</label>
+            <input name="region_surcharge" type="number" class="border rounded px-2 py-1.5">
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">숙식비(청구)</label>
+            <input name="lodging_fee" type="number" class="border rounded px-2 py-1.5">
+        </div>
+        <div class="col-span-3 flex items-end gap-3 text-xs text-gray-500 pb-1.5">
+            최종구분: <span id="op-preview-type" class="font-semibold text-blue-600">-</span>
+            추가시간: <span id="op-preview-extra" class="font-semibold">-</span>h
+            시간할증: <span id="op-preview-surcharge" class="font-semibold text-red-500">-</span>원
+        </div>
+    </div>
+
+    <!-- 기사 지급 -->
+    <div class="border-t pt-3">
+        <div class="text-xs font-semibold text-gray-400 mb-2">── 기사 지급 ──</div>
+        <div class="grid grid-cols-6 gap-2">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">기사</label>
+                <select name="driver_id" id="op-driver-id" class="border rounded px-2 py-1.5" onchange="opFillDriverInfo(this.value)">
+                    <option value="">기사 선택</option>
+                    {% for d in drivers %}
+                    <option value="{{ d.id }}">{{ d.name }} ({{ d.type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">차량번호</label>
+                <input name="plate_number" id="op-plate-number" class="border rounded px-2 py-1.5">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">기본급</label>
+                <input name="base_pay" id="op-base-pay" type="number" class="border rounded px-2 py-1.5">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">유류비(지급)</label>
+                <input name="fuel_cost" type="number" class="border rounded px-2 py-1.5">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">통행료(지급)</label>
+                <input name="toll_fee" type="number" class="border rounded px-2 py-1.5">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">주차비(지급)</label>
+                <input name="parking_fee" type="number" class="border rounded px-2 py-1.5">
+            </div>
+        </div>
+        <div class="grid grid-cols-6 gap-2 mt-2">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">식대(지급)</label>
+                <input name="meal_fee" type="number" class="border rounded px-2 py-1.5">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">숙식비(지급)</label>
+                <input name="lodging_pay" type="number" class="border rounded px-2 py-1.5">
+            </div>
+        </div>
+    </div>
+
+    <!-- 회사카드 경비 -->
+    <div class="border-t pt-3">
+        <div class="text-xs font-semibold text-orange-500 mb-2">── 회사카드 경비 (입출금관리 자동등록) ──</div>
+        <div class="grid grid-cols-4 gap-2 mb-2">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500">결제수단</label>
+                <select name="card_account_id" class="border rounded px-2 py-1.5">
+                    <option value="">선택</option>
+                    {% for a in accounts %}
+                    <option value="{{ a.id }}">{{ a.name }} ({{ a.type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-span-3 grid grid-cols-3 gap-2">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500">유류비 <span class="text-gray-300">(차량유지비)</span></label>
+                    <input name="card_fuel" type="number" placeholder="0" class="border rounded px-2 py-1.5 border-orange-200">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500">통행료 <span class="text-gray-300">(차량유지비)</span></label>
+                    <input name="card_toll" type="number" placeholder="0" class="border rounded px-2 py-1.5 border-orange-200">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500">주차비 <span class="text-gray-300">(차량유지비)</span></label>
+                    <input name="card_parking" type="number" placeholder="0" class="border rounded px-2 py-1.5 border-orange-200">
+                </div>
+            </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+            <div></div>
+            <div class="col-span-3 grid grid-cols-3 gap-2">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500">식대 <span class="text-gray-300">(여비교통비)</span></label>
+                    <input name="card_meal" type="number" placeholder="0" class="border rounded px-2 py-1.5 border-orange-200">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500">숙식비 <span class="text-gray-300">(여비교통비)</span></label>
+                    <input name="card_lodging" type="number" placeholder="0" class="border rounded px-2 py-1.5 border-orange-200">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500">기타 <span class="text-gray-300">(여비교통비)</span></label>
+                    <input name="card_etc" type="number" placeholder="0" class="border rounded px-2 py-1.5 border-orange-200">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex gap-2">
+        <button type="submit" id="form-submit-btn"
+                class="bg-slate-800 text-white rounded px-6 py-1.5 text-sm">+ 명세 추가</button>
+        <button type="button" id="form-cancel-btn"
+                class="hidden border rounded px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                onclick="resetOpForm()">취소</button>
+    </div>
+</form>

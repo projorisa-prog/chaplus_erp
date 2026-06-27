@@ -137,6 +137,7 @@ class OperationDetail(db.Model):
     id = db.Column(db.String(10), primary_key=True)          # OD26001
     order_id = db.Column(db.String(10), db.ForeignKey('operation_orders.id'), nullable=False)
     run_date = db.Column(db.String(10))                       # YYYY-MM-DD
+    product_type = db.Column(db.String(20))               # Full-Day/Half-Day/DropOff/PickUp
     vehicle_id = db.Column(db.String(10), db.ForeignKey('vehicles.id'))
 
     # ── 청구 ──

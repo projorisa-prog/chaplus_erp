@@ -1,0 +1,30 @@
+<tr id="pa-row-{{ a.id }}" class="border-b bg-yellow-50 text-sm">
+    <td class="px-2 py-1 font-mono text-gray-400">{{ a.id }}</td>
+    <td class="px-1">
+        <select name="type" class="border rounded px-1 py-0.5">
+            {% for t in ['카드','계좌','현금'] %}
+            <option value="{{ t }}" {% if a.type==t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-1"><input name="name" value="{{ a.name }}" class="w-24 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="number" value="{{ a.number or '' }}" class="w-32 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="bank_name" value="{{ a.bank_name or '' }}" class="w-20 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="holder" value="{{ a.holder or '' }}" class="w-20 border rounded px-1 py-0.5"></td>
+    <td class="px-1">
+        <select name="is_active" class="border rounded px-1 py-0.5">
+            <option value="true" {% if a.is_active %}selected{% endif %}>사용중</option>
+            <option value="false" {% if not a.is_active %}selected{% endif %}>사용안함</option>
+        </select>
+    </td>
+    <td class="px-1"><input name="memo" value="{{ a.memo or '' }}" class="w-24 border rounded px-1 py-0.5"></td>
+    <td class="px-2 text-right space-x-1">
+        <button class="text-green-600 text-xs"
+                hx-put="/api/payment_accounts/{{ a.id }}"
+                hx-include="closest tr"
+                hx-target="#pa-rows" hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500 text-xs"
+                hx-get="/api/payment_accounts/{{ a.id }}/cancel"
+                hx-target="#pa-row-{{ a.id }}" hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

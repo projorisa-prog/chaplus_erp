@@ -1,44 +1,57 @@
+{% set bill_sub = od.unit_price + od.region_surcharge + od.time_surcharge + od.lodging_fee %}
 <tr id="od-row-{{ od.id }}" class="border-b bg-yellow-50 text-xs">
-    <td class="py-1 font-mono text-gray-400">{{ od.id }}</td>
-    <td><input name="run_date" type="date" value="{{ od.run_date or '' }}" class="w-28 border rounded px-1 py-0.5"></td>
-    <td>
-        <select name="vehicle_id" class="border rounded px-1 py-0.5">
+    <td class="px-2 py-1 font-mono text-gray-400">{{ od.id }}</td>
+    <td class="px-1"><input name="run_date" type="date" value="{{ od.run_date or '' }}" class="w-28 border rounded px-1 py-0.5"></td>
+    <td class="px-1">
+        <select name="product_type" class="border rounded px-1 py-0.5">
+            {% for pt in ['Full-Day','Half-Day','DropOff','PickUp'] %}
+            <option value="{{ pt }}" {% if od.product_type == pt %}selected{% endif %}>{{ pt }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-1">
+        <select name="vehicle_id" id="edit-vehicle-{{ od.id }}"
+                class="border rounded px-1 py-0.5"
+                onchange="editVehicleChanged('{{ od.id }}')">
             <option value="">-</option>
             {% for v in vehicles %}
-            <option value="{{ v.id }}" {% if od.vehicle_id == v.id %}selected{% endif %}>
+            <option value="{{ v.id }}"
+                    data-plate="{{ v.plate_number or '' }}"
+                    {% if od.vehicle_id == v.id %}selected{% endif %}>
                 {{ v.name }}{% if v.plate_number %} ({{ v.plate_number }}){% endif %}
             </option>
             {% endfor %}
         </select>
     </td>
-    <td><input name="plate_number" value="{{ od.plate_number or '' }}" class="w-20 border rounded px-1 py-0.5"></td>
-    <td><input name="unit_price" type="number" value="{{ od.unit_price }}" class="w-20 border rounded px-1 py-0.5"></td>
-    <td><input name="start_time" value="{{ od.start_time or '' }}" placeholder="HH:MM" class="w-14 border rounded px-1 py-0.5"></td>
-    <td><input name="end_time" value="{{ od.end_time or '' }}" placeholder="HH:MM" class="w-14 border rounded px-1 py-0.5"></td>
-    <td class="text-center text-gray-400">자동</td>
-    <td class="text-center text-gray-400">자동</td>
-    <td><input name="region" value="{{ od.region or '' }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td><input name="region_surcharge" type="number" value="{{ od.region_surcharge or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td><input name="lodging_fee" type="number" value="{{ od.lodging_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td class="text-gray-400 bg-blue-50">저장후</td>
-    <td>
-        <select name="driver_id" class="border rounded px-1 py-0.5">
+    <td class="px-1"><input name="unit_price" type="number" value="{{ od.unit_price or 0 }}" class="w-20 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="start_time" value="{{ od.start_time or '' }}" placeholder="HH:MM" class="w-14 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="end_time" value="{{ od.end_time or '' }}" placeholder="HH:MM" class="w-14 border rounded px-1 py-0.5"></td>
+    <td class="px-2 text-center text-gray-400">자동</td>
+    <td class="px-2 text-center text-gray-400">자동</td>
+    <td class="px-1"><input name="region" value="{{ od.region or '' }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="region_surcharge" type="number" value="{{ od.region_surcharge or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="lodging_fee" type="number" value="{{ od.lodging_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-2 text-gray-400 bg-blue-50">저장후</td>
+    <td class="px-1">
+        <select name="driver_id" id="edit-driver-{{ od.id }}"
+                class="border rounded px-1 py-0.5"
+                onchange="editDriverChanged('{{ od.id }}')">
             <option value="">-</option>
             {% for d in drivers %}
             <option value="{{ d.id }}" {% if od.driver_id == d.id %}selected{% endif %}>{{ d.name }}</option>
             {% endfor %}
         </select>
     </td>
-    <td><input name="plate_number" value="{{ od.plate_number or '' }}" class="w-20 border rounded px-1 py-0.5"></td>
-    <td><input name="base_pay" type="number" value="{{ od.base_pay or 0 }}" class="w-20 border rounded px-1 py-0.5"></td>
-    <td><input name="driver_extra_time" type="number" value="{{ od.driver_extra_time or 0 }}" class="w-12 border rounded px-1 py-0.5"></td>
-    <td><input name="fuel_cost" type="number" value="{{ od.fuel_cost or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td><input name="toll_fee" type="number" value="{{ od.toll_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td><input name="parking_fee" type="number" value="{{ od.parking_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td><input name="meal_fee" type="number" value="{{ od.meal_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td><input name="lodging_pay" type="number" value="{{ od.lodging_pay or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
-    <td class="text-gray-400 bg-orange-50">저장후</td>
-    <td class="text-right space-x-1">
+    <td class="px-1"><input name="plate_number" id="edit-plate-{{ od.id }}" value="{{ od.plate_number or '' }}" class="w-20 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="base_pay" id="edit-basepay-{{ od.id }}" type="number" value="{{ od.base_pay or 0 }}" class="w-20 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="driver_extra_time" type="number" value="{{ od.driver_extra_time or 0 }}" class="w-12 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="fuel_cost" type="number" value="{{ od.fuel_cost or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="toll_fee" type="number" value="{{ od.toll_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="parking_fee" type="number" value="{{ od.parking_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="meal_fee" type="number" value="{{ od.meal_fee or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-1"><input name="lodging_pay" type="number" value="{{ od.lodging_pay or 0 }}" class="w-16 border rounded px-1 py-0.5"></td>
+    <td class="px-2 text-gray-400 bg-orange-50">저장후</td>
+    <td class="px-2 text-right space-x-1">
         <button class="text-green-600"
                 hx-put="/api/operation_details/{{ od.id }}"
                 hx-include="closest tr"
@@ -50,3 +63,25 @@
                 hx-swap="outerHTML">취소</button>
     </td>
 </tr>
+<script>
+function editVehicleChanged(rowId) {
+    var sel = document.getElementById('edit-vehicle-' + rowId);
+    var plate = sel.options[sel.selectedIndex].dataset.plate || '';
+    if (plate) {
+        document.getElementById('edit-plate-' + rowId).value = plate;
+    }
+}
+
+function editDriverChanged(rowId) {
+    var driverId = document.getElementById('edit-driver-' + rowId).value;
+    if (!driverId) return;
+    var vehicleSel = document.getElementById('edit-vehicle-' + rowId);
+    var vehiclePlate = vehicleSel.options[vehicleSel.selectedIndex].dataset.plate || '';
+    fetch('/api/drivers/' + driverId + '/info')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('edit-plate-' + rowId).value = vehiclePlate || data.plate_number || '';
+            document.getElementById('edit-basepay-' + rowId).value = data.base_pay || '';
+        });
+}
+</script>

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}청구관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">💰 청구관리</h1>
+
+<!-- 검색 툴바 -->
+<form method="get" class="bg-white rounded-lg shadow p-3 mb-4 flex flex-wrap gap-2 items-center text-sm">
+    <select name="year" class="border rounded px-2 py-1.5">
+        {% for y in years %}
+        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}년</option>
+        {% endfor %}
+    </select>
+    <div class="flex gap-1">
+        {% for m in months %}
+        <a href="?year={{ year }}&month={{ m }}&q={{ q }}"
+           class="px-2 py-1 rounded text-xs border
+               {% if m == month %}bg-slate-800 text-white{% else %}hover:bg-gray-100{% endif %}">
+            {{ m }}
+        </a>
+        {% endfor %}
+    </div>
+    <input name="q" value="{{ q }}" placeholder="거래처명 검색"
+           class="border rounded px-2 py-1.5 ml-auto">
+    <button type="submit" class="bg-slate-800 text-white px-4 py-1.5 rounded">조회</button>
+    <a href="/billing" class="border px-4 py-1.5 rounded hover:bg-gray-50">초기화</a>
+</form>
+
+<!-- 거래처별 집계 -->
+<div class="grid grid-cols-4 gap-3 mb-6">
+    {% for cname, total in client_totals.items() %}
+    <div class="bg-white rounded-lg shadow p-3">
+        <div class="text-xs text-gray-500 mb-1">{{ cname }}</div>
+        <div class="text-lg font-bold text-blue-700">{{ '{:,}'.format(total) }}원</div>
+    </div>
+    {% endfor %}
+    <div class="bg-slate-800 text-white rounded-lg shadow p-3">
+        <div class="text-xs text-slate-300 mb-1">전체 합계</div>
+        <div class="text-lg font-bold">{{ '{:,}'.format(grand_bill) }}원</div>
+    </div>
+</div>
+
+<!-- 운행별 상세 -->
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm whitespace-nowrap border-collapse">
+        <thead>
+            <tr class="bg-gray-100 text-left text-xs text-gray-600">
+                <th class="px-2 py-2">운행ID</th>
+                <th class="px-2 py-2">거래처</th>
+                <th class="px-2 py-2">운행시작</th>
+                <th class="px-2 py-2">운행종료</th>
+                <th class="px-2 py-2">운행일</th>
+                <th class="px-2 py-2">구분</th>
+                <th class="px-2 py-2">차종</th>
+                <th class="px-2 py-2">단가</th>
+                <th class="px-2 py-2">지역할증</th>
+                <th class="px-2 py-2">시간할증</th>
+                <th class="px-2 py-2">숙식</th>
+                <th class="px-2 py-2 bg-blue-50">소계</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set prev_order = namespace(id='') %}
+            {% set order_sub = namespace(val=0) %}
+            {% for o in orders %}
+                {% for od in o.details %}
+                {% set sub = od.unit_price + od.region_surcharge + od.time_surcharge + od.lodging_fee %}
+                {% set order_sub.val = order_sub.val + sub %}
+                <tr class="border-b hover:bg-gray-50 text-xs">
+                    <td class="px-2 py-1.5 font-mono text-blue-600">
+                        {% if loop.first %}{{ o.id }}{% endif %}
+                    </td>
+                    <td class="px-2">{% if loop.first %}{{ o.client.name }}{% endif %}</td>
+                    <td class="px-2">{% if loop.first %}{{ o.start_datetime or '' }}{% endif %}</td>
+                    <td class="px-2">{% if loop.first %}{{ o.end_datetime or '' }}{% endif %}</td>
+                    <td class="px-2">{{ od.run_date or '' }}</td>
+                    <td class="px-2">
+                        <span class="px-1.5 py-0.5 rounded
+                            {% if od.product_type == 'Full-Day' %}bg-blue-100 text-blue-700
+                            {% elif od.product_type == 'Half-Day' %}bg-purple-100 text-purple-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ od.product_type or '' }}
+                        </span>
+                    </td>
+                    <td class="px-2">
+                        {{ od.vehicle.name if od.vehicle else '' }}
+                        {% if od.vehicle and od.vehicle.plate_number %}({{ od.vehicle.plate_number }}){% endif %}
+                    </td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(od.unit_price) if od.unit_price else '' }}</td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(od.region_surcharge) if od.region_surcharge else '' }}</td>
+                    <td class="px-2 text-right text-red-500">{{ '{:,}'.format(od.time_surcharge) if od.time_surcharge else '' }}</td>
+                    <td class="px-2 text-right">{{ '{:,}'.format(od.lodging_fee) if od.lodging_fee else '' }}</td>
+                    <td class="px-2 text-right font-semibold bg-blue-50 text-blue-700">{{ '{:,}'.format(sub) }}</td>
+                </tr>
+                {% if loop.last %}
+                <tr class="border-b bg-blue-50 font-semibold text-xs">
+                    <td colspan="11" class="px-2 py-1 text-right text-gray-500">{{ o.id }} 소계</td>
+                    <td class="px-2 text-right text-blue-700">{{ '{:,}'.format(order_sub.val) }}</td>
+                </tr>
+                {% set order_sub.val = 0 %}
+                {% endif %}
+                {% endfor %}
+            {% else %}
+            <tr><td colspan="12" class="text-center text-gray-400 py-8">해당 기간 청구 데이터가 없습니다.</td></tr>
+            {% endfor %}
+
+            <!-- Grand Total -->
+            {% if orders %}
+            <tr class="bg-slate-800 text-white font-bold text-sm">
+                <td colspan="11" class="px-2 py-2 text-right">{{ year }}년 {{ month }}월 합계</td>
+                <td class="px-2 text-right">{{ '{:,}'.format(grand_bill) }}원</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

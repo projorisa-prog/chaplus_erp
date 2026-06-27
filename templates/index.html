@@ -2,39 +2,127 @@
 {% block title %}대시보드 - 차플러스 ERP{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-6">대시보드</h1>
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">📊 대시보드</h1>
+    <span class="text-sm text-gray-400">{{ today.strftime('%Y년 %m월 %d일') }}</span>
+</div>
 
-<div class="grid grid-cols-4 gap-4 mb-8">
+<!-- 요약 카드 -->
+<div class="grid grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-lg shadow p-4">
-        <div class="text-sm text-gray-500">이달 운행 건수</div>
-        <div class="text-2xl font-bold mt-1">-</div>
+        <div class="text-xs text-gray-500 mb-1">이달 운행 건수</div>
+        <div class="text-3xl font-bold text-blue-700">{{ month_order_count }}</div>
+        <div class="text-xs text-gray-400 mt-1">건</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
-        <div class="text-sm text-gray-500">이달 견적 건수</div>
-        <div class="text-2xl font-bold mt-1">-</div>
+        <div class="text-xs text-gray-500 mb-1">이달 견적 건수</div>
+        <div class="text-3xl font-bold text-purple-700">{{ month_quote_count }}</div>
+        <div class="text-xs text-gray-400 mt-1">건</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
-        <div class="text-sm text-gray-500">예약확정 대기</div>
-        <div class="text-2xl font-bold mt-1">-</div>
+        <div class="text-xs text-gray-500 mb-1">예약확정 대기</div>
+        <div class="text-3xl font-bold text-yellow-600">{{ pending_count }}</div>
+        <div class="text-xs text-gray-400 mt-1">건</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
-        <div class="text-sm text-gray-500">이달 청구 합계</div>
-        <div class="text-2xl font-bold mt-1">-</div>
+        <div class="text-xs text-gray-500 mb-1">이달 청구합계</div>
+        <div class="text-xl font-bold text-blue-700">{{ '{:,}'.format(month_bill) }}</div>
+        <div class="text-xs text-gray-400 mt-1">원</div>
     </div>
 </div>
 
-<div class="grid grid-cols-2 gap-6">
-    <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="font-semibold mb-3">최근 운행 목록</h2>
-        <p class="text-sm text-gray-400">2단계 이후 연동 예정</p>
+<!-- 입출금 요약 -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">이달 입금</div>
+        <div class="text-xl font-bold text-green-600">{{ '{:,}'.format(month_income) }}원</div>
     </div>
-    <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="font-semibold mb-3">최근 견적 목록</h2>
-        <p class="text-sm text-gray-400">2단계 이후 연동 예정</p>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">이달 출금</div>
+        <div class="text-xl font-bold text-red-500">{{ '{:,}'.format(month_expense) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+        <div class="text-xs text-gray-500 mb-1">이달 손익</div>
+        <div class="text-xl font-bold {% if month_profit >= 0 %}text-green-700{% else %}text-red-600{% endif %}">
+            {{ '{:,}'.format(month_profit) }}원
+        </div>
     </div>
 </div>
 
-<div class="mt-8 text-xs text-gray-400">
-    ✅ 1단계 기반 구축 완료 — Flask 서버가 정상 작동 중입니다.
+<div class="grid grid-cols-3 gap-6">
+    <!-- 최근 운행 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="font-semibold text-sm">최근 운행</h2>
+            <a href="/operations" class="text-xs text-blue-500">전체보기</a>
+        </div>
+        <div class="space-y-2">
+            {% for o in recent_orders %}
+            <a href="/operations/{{ o.id }}"
+               class="block p-2 rounded border hover:bg-gray-50 text-xs">
+                <div class="flex justify-between">
+                    <span class="font-mono text-blue-600">{{ o.id }}</span>
+                    <span class="px-1.5 py-0.5 rounded
+                        {% if o.status == '운행' %}bg-blue-100 text-blue-700
+                        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                        {{ o.status }}
+                    </span>
+                </div>
+                <div class="text-gray-600 mt-1">{{ o.client.name }}</div>
+                <div class="text-gray-400">{{ o.start_datetime or '' }}</div>
+            </a>
+            {% else %}
+            <p class="text-xs text-gray-400 text-center py-4">운행 데이터 없음</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 최근 견적 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="font-semibold text-sm">최근 견적</h2>
+            <a href="/quotes" class="text-xs text-blue-500">전체보기</a>
+        </div>
+        <div class="space-y-2">
+            {% for q in recent_quotes %}
+            <a href="/quotes/{{ q.id }}"
+               class="block p-2 rounded border hover:bg-gray-50 text-xs">
+                <div class="flex justify-between">
+                    <span class="font-mono text-blue-600">{{ q.id }}</span>
+                    <span class="px-1.5 py-0.5 rounded
+                        {% if q.status == '확정' %}bg-green-100 text-green-700
+                        {% elif q.status == '취소' %}bg-red-100 text-red-600
+                        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                        {{ q.status }}
+                    </span>
+                </div>
+                <div class="text-gray-600 mt-1">{{ q.client.name }}</div>
+                <div class="text-gray-400">{{ q.start_datetime or '' }}</div>
+            </a>
+            {% else %}
+            <p class="text-xs text-gray-400 text-center py-4">견적 데이터 없음</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 이달 미수금 TOP5 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="font-semibold text-sm">이달 미수금 TOP5</h2>
+            <a href="/client_ledger" class="text-xs text-blue-500">원장보기</a>
+        </div>
+        {% if client_unpaid %}
+        <div class="space-y-2">
+            {% for cu in client_unpaid %}
+            <div class="flex justify-between items-center text-xs p-2 border rounded">
+                <span class="text-gray-700">{{ cu.name }}</span>
+                <span class="font-semibold text-red-600">{{ '{:,}'.format(cu.unpaid) }}원</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-gray-400 text-center py-4">미수금 없음 ✅</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

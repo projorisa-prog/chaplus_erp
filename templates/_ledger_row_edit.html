@@ -1,0 +1,60 @@
+<tr id="ledger-row-{{ e.id }}" class="border-b bg-yellow-50 text-xs">
+    <td class="px-2 py-1 font-mono text-gray-400">{{ e.id }}</td>
+    <td class="px-1"><input name="date" type="date" value="{{ e.date }}" class="w-28 border rounded px-1 py-0.5"></td>
+    <td class="px-1">
+        <select name="type" class="border rounded px-1 py-0.5">
+            <option value="입금" {% if e.type=='입금' %}selected{% endif %}>입금</option>
+            <option value="출금" {% if e.type=='출금' %}selected{% endif %}>출금</option>
+        </select>
+    </td>
+    <td class="px-1"><input name="amount" type="number" value="{{ e.amount }}" class="w-24 border rounded px-1 py-0.5"></td>
+    <td class="px-1">
+        <select name="payment_account_id" class="border rounded px-1 py-0.5">
+            <option value="">-</option>
+            {% for a in accounts %}
+            <option value="{{ a.id }}" {% if e.payment_account_id == a.id %}selected{% endif %}>{{ a.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-1">
+        <select name="account_subject_id" class="border rounded px-1 py-0.5">
+            <option value="">-</option>
+            {% for s in subjects %}
+            <option value="{{ s.id }}" {% if e.account_subject_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-1">
+        <select name="client_id" class="border rounded px-1 py-0.5">
+            <option value="">-</option>
+            {% for c in clients %}
+            <option value="{{ c.id }}" {% if e.client_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="driver_id" class="border rounded px-1 py-0.5 mt-0.5">
+            <option value="">-</option>
+            {% for d in drivers %}
+            <option value="{{ d.id }}" {% if e.driver_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-1">
+        <select name="receipt_type" class="border rounded px-1 py-0.5">
+            {% for rt in ['카드영수증','세금계산서','현금영수증','없음'] %}
+            <option value="{{ rt }}" {% if e.receipt_type == rt %}selected{% endif %}>{{ rt }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-1"><input name="memo" value="{{ e.memo or '' }}" class="w-28 border rounded px-1 py-0.5"></td>
+    <td class="px-2 text-right space-x-1">
+        <button class="text-green-600"
+                hx-put="/api/ledger/{{ e.id }}"
+                hx-include="closest tr"
+                hx-target="#ledger-rows"
+                hx-swap="innerHTML">저장</button>
+        <button class="text-gray-500"
+                hx-get="/api/ledger/{{ e.id }}/cancel"
+                hx-target="#ledger-row-{{ e.id }}"
+                hx-swap="outerHTML">취소</button>
+    </td>
+</tr>

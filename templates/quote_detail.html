@@ -5,6 +5,10 @@
 <div class="flex items-center gap-3 mb-4">
     <a href="/quotes" class="text-gray-400 hover:text-gray-600 text-sm">← 목록</a>
     <h1 class="text-2xl font-bold">견적 {{ q.id }}</h1>
+    <a href="/quotes/{{ q.id }}/pdf"
+       class="ml-auto bg-red-600 text-white px-4 py-1.5 rounded text-sm">
+        📄 견적서 PDF
+    </a>
     <span class="px-2 py-0.5 rounded text-xs
         {% if q.status == '확정' %}bg-green-100 text-green-700
         {% elif q.status == '취소' %}bg-red-100 text-red-600
@@ -41,9 +45,7 @@
     <select name="vehicle_id" class="border rounded px-2 py-1.5">
         <option value="">차종 선택</option>
         {% for v in vehicles %}
-        <option value="{{ v.id }}">
-            {{ v.name }}{% if v.plate_number %} ({{ v.plate_number }}){% endif %}
-        </option>
+        <option value="{{ v.id }}">{{ v.name }}</option>
         {% endfor %}
     </select>
     <input name="qty" type="number" value="1" min="1" placeholder="대수"

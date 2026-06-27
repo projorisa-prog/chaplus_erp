@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file
 
 from extensions import db
 from models import Quote, QuoteDetail, Client, Vehicle
@@ -218,3 +218,18 @@ def api_calc_time_surcharge():
         'time_surcharge': surcharge,
         'includes': generate_includes(final_type or product_type),
     })
+
+
+# ── 견적서 PDF 다운로드 ───────────────────
+@quotes_bp.route('/quotes/<id>/pdf')
+def quote_pdf(id):
+    from models import Settings
+    from services.pdf_service import generate_quote_pdf
+    q = Quote.query.get_or_404(id)
+    settings = {s.key: s.value for s in Settings.query.all()}
+    buf = generate_quote_pdf(q, settings)
+    filename = f"견적서_{q.id}_{q.client.name}.pdf"
+    return send_file(buf,
+                     mimetype='application/pdf',
+                     as_attachment=True,
+                     download_name=filename)

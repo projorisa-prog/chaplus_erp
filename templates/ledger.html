@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}입출금관리 - 차플러스 ERP{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">💵 입출금관리</h1>
+
+<!-- 검색 툴바 -->
+<form method="get" class="bg-white rounded-lg shadow p-3 mb-4 flex flex-wrap gap-2 items-center text-sm">
+    <input type="hidden" name="year" value="{{ year }}">
+    <select name="year" class="border rounded px-2 py-1.5">
+        {% for y in years %}
+        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}년</option>
+        {% endfor %}
+    </select>
+    <div class="flex gap-1">
+        {% for m in months %}
+        <a href="?year={{ year }}&month={{ m }}&q={{ q }}&ledger_type={{ ledger_type }}&subject_id={{ subject_id }}"
+           class="px-2 py-1 rounded text-xs border
+               {% if m == month %}bg-slate-800 text-white{% else %}hover:bg-gray-100{% endif %}">
+            {{ m }}
+        </a>
+        {% endfor %}
+    </div>
+    <select name="ledger_type" class="border rounded px-2 py-1.5">
+        <option value="">전체</option>
+        <option value="입금" {% if ledger_type=='입금' %}selected{% endif %}>입금</option>
+        <option value="출금" {% if ledger_type=='출금' %}selected{% endif %}>출금</option>
+    </select>
+    <select name="subject_id" class="border rounded px-2 py-1.5">
+        <option value="">전체 계정과목</option>
+        {% for s in subjects %}
+        <option value="{{ s.id }}" {% if subject_id|string == s.id|string %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+    </select>
+    <input name="q" value="{{ q }}" placeholder="거래처/기사/메모 검색" class="border rounded px-2 py-1.5">
+    <button type="submit" class="bg-slate-800 text-white px-4 py-1.5 rounded">조회</button>
+    <a href="/ledger" class="border px-4 py-1.5 rounded hover:bg-gray-50">초기화</a>
+    <button type="button" class="ml-auto bg-green-700 text-white px-4 py-1.5 rounded"
+            hx-post="/api/ledger/generate_fixed"
+            hx-target="#ledger-rows"
+            hx-swap="innerHTML"
+            hx-confirm="이번달 고정지출을 생성하시겠습니까? (이미 있는 항목은 건너뜁니다)">
+        📋 이번달 고정지출 생성
+    </button>
+</form>
+
+<div class="grid grid-cols-3 gap-4 mb-4">
+    <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500">입금 합계</div>
+        <div class="text-xl font-bold text-blue-600">{{ '{:,}'.format(income) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500">출금 합계</div>
+        <div class="text-xl font-bold text-red-500">{{ '{:,}'.format(expense) }}원</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500">차액</div>
+        <div class="text-xl font-bold {% if income - expense >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            {{ '{:,}'.format(income - expense) }}원
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-3 gap-6 items-start">
+    <!-- 추가 폼 -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="font-semibold mb-3">내역 추가</h2>
+        <form hx-post="/api/ledger/" hx-target="#ledger-rows" hx-swap="innerHTML"
+              hx-include="[name='year'],[name='month']"
+              hx-on::after-request="this.reset(); updateReceiptType()"
+              class="space-y-2 text-sm">
+            <input type="hidden" name="year" value="{{ year }}">
+            <input type="hidden" name="month" value="{{ month }}">
+            <input name="date" type="date" required value="{{ '%04d-%02d-01'|format(year,month) }}"
+                   class="w-full border rounded px-2 py-1.5">
+            <select name="type" required class="w-full border rounded px-2 py-1.5">
+                <option value="입금">입금</option>
+                <option value="출금">출금</option>
+            </select>
+            <input name="amount" type="number" placeholder="금액" required
+                   class="w-full border rounded px-2 py-1.5">
+            <select name="payment_account_id" id="add-pa"
+                    class="w-full border rounded px-2 py-1.5"
+                    onchange="updateReceiptType()">
+                <option value="">결제수단 선택</option>
+                {% for a in accounts %}
+                <option value="{{ a.id }}" data-type="{{ a.type }}">{{ a.name }} ({{ a.type }})</option>
+                {% endfor %}
+            </select>
+            <select name="account_subject_id" class="w-full border rounded px-2 py-1.5">
+                <option value="">계정과목 선택</option>
+                {% for s in subjects %}
+                <option value="{{ s.id }}">[{{ s.type }}] {{ s.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="client_id" class="w-full border rounded px-2 py-1.5">
+                <option value="">거래처 (입금시)</option>
+                {% for c in clients %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="driver_id" class="w-full border rounded px-2 py-1.5">
+                <option value="">기사 (출금시)</option>
+                {% for d in drivers %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="receipt_type" id="add-receipt-type" class="w-full border rounded px-2 py-1.5">
+                <option value="">증빙 선택</option>
+                <option value="카드영수증">카드영수증</option>
+                <option value="세금계산서">세금계산서</option>
+                <option value="현금영수증">현금영수증</option>
+                <option value="없음">없음</option>
+            </select>
+            <input name="memo" placeholder="메모" class="w-full border rounded px-2 py-1.5">
+            <button type="submit" class="w-full bg-slate-800 text-white rounded py-1.5">+ 추가</button>
+        </form>
+    </div>
+
+    <!-- 목록 -->
+    <div class="col-span-2 bg-white rounded-lg shadow p-4 overflow-x-auto">
+        <table class="w-full text-sm whitespace-nowrap border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-left text-xs text-gray-600">
+                    <th class="px-2 py-2">ID</th>
+                    <th class="px-2 py-2">날짜</th>
+                    <th class="px-2 py-2">구분</th>
+                    <th class="px-2 py-2 text-right">금액</th>
+                    <th class="px-2 py-2">결제수단</th>
+                    <th class="px-2 py-2">계정과목</th>
+                    <th class="px-2 py-2">거래처/기사</th>
+                    <th class="px-2 py-2">증빙</th>
+                    <th class="px-2 py-2">메모</th>
+                    <th class="px-2 py-2"></th>
+                </tr>
+            </thead>
+            <tbody id="ledger-rows">
+                {% include '_ledger_rows.html' %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function updateReceiptType() {
+    var sel = document.getElementById('add-pa');
+    var opt = sel.options[sel.selectedIndex];
+    var paType = opt ? opt.dataset.type : '';
+    var rt = document.getElementById('add-receipt-type');
+    if (paType === '카드') {
+        rt.value = '카드영수증';
+        rt.disabled = true;
+    } else {
+        rt.disabled = false;
+        if (rt.value === '카드영수증') rt.value = '';
+    }
+}
+</script>
+{% endblock %}
